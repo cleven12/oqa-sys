@@ -235,41 +235,45 @@ def get_questions(request, session_id):
         if session.is_submitted:
             return JsonResponse({'error': 'Quiz already submitted'}, status=400)
         
-        # get all questions for this quiz
-        questions = session.quiz.questions.all().order_by('order')
-        
-        questions_data = []
-        for idx, question in enumerate(questions):
-            # get existing answer if any
-            try:
-                answer = Answer.objects.get(session=session, question=question)
-                chosen_answer = answer.chosen_answer
-            except Answer.DoesNotExist:
-                chosen_answer = None
-            
-            # build options list based on question type
-            options = []
-            if question.question_type == 'mcq':
-                options = [
-                    {'key': 'option_a', 'label': 'A)', 'text': question.option_a},
-                    {'key': 'option_b', 'label': 'B)', 'text': question.option_b},
-                    {'key': 'option_c', 'label': 'C)', 'text': question.option_c},
-                    {'key': 'option_d', 'label': 'D)', 'text': question.option_d},
-                ]
-            elif question.question_type == 'true_false':
-                options = [
+        import random as _random
+
+        # use randomized order stored at quiz start
+        order_key = f'q_order_{session.id}'
+        question_ids = request.session.get(order_key)
+
+        if question_ids:
+            questions_map = {q.id: q for q in session.quiz.questions.filter(id__in=question_ids)}
+            questions = [questions_map[qid] for qid in question_ids if qid in questions_map]
+        else:
+            questions = list(session.quiz.questions.order_by('order'))
+
+        def get_options(question):
+            if question.question_type == 'true_false':
+                return [
                     {'key': 'option_a', 'label': 'A)', 'text': question.option_a or 'True'},
                     {'key': 'option_b', 'label': 'B)', 'text': question.option_b or 'False'},
                 ]
-            
+            choices = [(k, getattr(question, k)) for k in ['option_a','option_b','option_c','option_d']
+                       if getattr(question, k)]
+            if question.quiz.randomize_choices:
+                _random.seed(f"{session.id}{question.id}")
+                _random.shuffle(choices)
+                _random.seed()
+            return [{'key': k, 'label': chr(65+i)+')', 'text': v} for i,(k,v) in enumerate(choices)]
+
+        # prefetch existing answers
+        existing = {a.question_id: a.chosen_answer for a in session.answers.all()}
+
+        questions_data = []
+        for idx, question in enumerate(questions):
             questions_data.append({
                 'id': question.id,
                 'index': idx,
                 'text': question.question_text,
                 'type': question.question_type,
                 'marks': question.marks,
-                'options': options,
-                'chosen_answer': chosen_answer  # existing answer if any
+                'options': get_options(question),
+                'chosen_answer': existing.get(question.id)
             })
         
         return JsonResponse({

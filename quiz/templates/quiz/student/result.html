@@ -49,7 +49,7 @@
                 <!-- Score Display -->
                 <div class="text-center mb-8">
                     <div class="inline-block relative">
-                        <svg class="w-48 h-48">
+                        <svg class="w-48 h-48" viewBox="0 0 192 192">
                             <circle cx="96" cy="96" r="80" stroke="#e5e7eb" stroke-width="12" fill="none"></circle>
                             <circle 
                                 cx="96" 
@@ -58,8 +58,8 @@
                                 stroke="{% if session.is_passed %}#10b981{% else %}#ef4444{% endif %}" 
                                 stroke-width="12" 
                                 fill="none"
-                                stroke-dasharray="{{ session.percentage_score|floatformat:0 }} 100"
-                                stroke-dashoffset="25"
+                                stroke-dasharray="{% widthratio session.percentage_score 100 502 %} 502"
+                                stroke-dashoffset="125"
                                 transform="rotate(-90 96 96)"
                                 class="transition-all duration-1000"
                             ></circle>
