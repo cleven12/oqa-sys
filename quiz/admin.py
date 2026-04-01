@@ -7,6 +7,12 @@ from .models import Quiz, QuestionGroup, Question, StudentSession, Answer, Suspi
 class QuestionAdminForm(forms.ModelForm):
     """Custom form for Question admin with dynamic field handling"""
     
+    # Override correct_answer as a ChoiceField (dynamically populated)
+    correct_answer = forms.ChoiceField(
+        choices=[],
+        help_text='Select the correct answer from available options'
+    )
+    
     class Meta:
         model = Question
         fields = '__all__'
@@ -17,6 +23,41 @@ class QuestionAdminForm(forms.ModelForm):
             'option_c': forms.TextInput(attrs={'size': 60}),
             'option_d': forms.TextInput(attrs={'size': 60}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Get the current question type (from instance if editing, or from POST data if creating)
+        question_type = None
+        if self.instance and self.instance.pk:
+            question_type = self.instance.question_type
+        elif self.data:
+            question_type = self.data.get('question_type')
+        
+        # Set correct_answer choices based on question type
+        if question_type == 'true_false':
+            self.fields['correct_answer'].choices = [
+                ('', '---------'),
+                ('option_a', 'Option A (True)'),
+                ('option_b', 'Option B (False)'),
+            ]
+        elif question_type == 'mcq':
+            self.fields['correct_answer'].choices = [
+                ('', '---------'),
+                ('option_a', 'Option A'),
+                ('option_b', 'Option B'),
+                ('option_c', 'Option C'),
+                ('option_d', 'Option D'),
+            ]
+        else:
+            # Default choices (all options)
+            self.fields['correct_answer'].choices = [
+                ('', '---------'),
+                ('option_a', 'Option A'),
+                ('option_b', 'Option B'),
+                ('option_c', 'Option C'),
+                ('option_d', 'Option D'),
+            ]
     
     def clean(self):
         cleaned_data = super().clean()
@@ -112,15 +153,15 @@ class QuestionAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Question Details', {
             'fields': ('quiz', 'group', 'question_type', 'question_text', 'order'),
-            'description': 'Select question type first to see relevant option fields'
+            'description': 'Select question type first - it will show/hide relevant fields automatically'
         }),
         ('Answer Options', {
             'fields': ('option_a', 'option_b', 'option_c', 'option_d'),
-            'description': 'MCQ: All 4 options required | True/False: Only A (True) and B (False) required'
+            'description': 'MCQ: Fill all 4 options | True/False: Only A and B will be shown'
         }),
         ('Correct Answer', {
             'fields': ('correct_answer',),
-            'description': 'Enter: option_a, option_b, option_c, or option_d'
+            'description': 'Select the correct answer from the dropdown'
         }),
         ('Advanced Settings', {
             'fields': ('duration_seconds',),
