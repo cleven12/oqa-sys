@@ -84,7 +84,6 @@ class Question(models.Model):
     QUESTION_TYPE_CHOICES = [
         ('mcq', 'Multiple Choice'),
         ('true_false', 'True/False'),
-        ('calculation', 'Calculation'),
     ]
 
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
@@ -110,11 +109,6 @@ class Question(models.Model):
         blank=True, 
         validators=[MinValueValidator(5)],
         help_text="Per-question timer (optional)"
-    )
-    max_attempts = models.IntegerField(
-        default=1,
-        validators=[MinValueValidator(1)],
-        help_text="For calculation questions only"
     )
     order = models.IntegerField(default=0)
 
@@ -185,7 +179,6 @@ class Answer(models.Model):
     session = models.ForeignKey(StudentSession, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
     chosen_answer = models.CharField(max_length=500, blank=True, null=True)
-    attempts_used = models.IntegerField(default=0)
     time_taken_seconds = models.IntegerField(default=0)
     is_correct = models.BooleanField(default=False)
     marks_awarded = models.IntegerField(default=0)

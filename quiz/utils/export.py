@@ -40,11 +40,12 @@ def generate_template(quiz):
     ws = wb.active
     ws.title = "Questions"
     
+    # Updated headers (removed max_attempts, moved group_name)
     headers = ['question_text', 'type', 'option_a', 'option_b', 'option_c', 'option_d', 
-               'correct_answer', 'duration_seconds', 'max_attempts', 'group_name']
+               'correct_answer', 'duration_seconds', 'group_name']
     ws.append(headers)
     
-    # Add sample row
+    # Add sample MCQ row
     ws.append([
         'What is 2 + 2?',
         'mcq',
@@ -54,7 +55,19 @@ def generate_template(quiz):
         '6',
         'option_b',
         '30',
-        '1',
+        'Easy'
+    ])
+    
+    # Add sample True/False row
+    ws.append([
+        'Python is a programming language',
+        'true_false',
+        'True',
+        'False',
+        '',  # Empty for C
+        '',  # Empty for D
+        'option_a',
+        '20',
         'Easy'
     ])
     
