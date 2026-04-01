@@ -28,13 +28,26 @@ def import_from_excel(quiz, excel_file):
             option_d = str(row[5]).strip() if row[5] else None
             correct_answer = str(row[6]).strip()
             duration_seconds = int(row[7]) if row[7] else None
-            max_attempts = int(row[8]) if row[8] else 1
-            group_name = str(row[9]).strip() if row[9] else None
+            group_name = str(row[8]).strip() if row[8] else None
             
-            # Validate question type
-            if question_type not in ['mcq', 'true_false', 'calculation']:
-                errors.append(f"Row {row_num}: Invalid question type '{question_type}'")
+            # Validate question type (only mcq and true_false allowed)
+            if question_type not in ['mcq', 'true_false']:
+                errors.append(f"Row {row_num}: Invalid question type '{question_type}'. Only 'mcq' and 'true_false' are allowed.")
                 continue
+            
+            # Validate options based on question type
+            if question_type == 'mcq':
+                if not all([option_a, option_b, option_c, option_d]):
+                    errors.append(f"Row {row_num}: MCQ questions require all 4 options")
+                    continue
+            
+            elif question_type == 'true_false':
+                if not option_a or not option_b:
+                    errors.append(f"Row {row_num}: True/False questions require option A and option B")
+                    continue
+                # Clear options C and D for true/false
+                option_c = None
+                option_d = None
             
             # Get or validate group
             group = None
@@ -44,6 +57,11 @@ def import_from_excel(quiz, excel_file):
                 except QuestionGroup.DoesNotExist:
                     errors.append(f"Row {row_num}: Group '{group_name}' does not exist")
                     continue
+            
+            # Validate correct answer
+            if correct_answer not in ['option_a', 'option_b', 'option_c', 'option_d']:
+                errors.append(f"Row {row_num}: Correct answer must be option_a, option_b, option_c, or option_d")
+                continue
             
             # Create question
             Question.objects.create(
@@ -57,7 +75,6 @@ def import_from_excel(quiz, excel_file):
                 option_d=option_d,
                 correct_answer=correct_answer,
                 duration_seconds=duration_seconds,
-                max_attempts=max_attempts,
                 order=row_num - 1
             )
             
