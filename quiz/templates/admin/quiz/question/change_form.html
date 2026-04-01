@@ -1,0 +1,105 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<script type="text/javascript">
+(function($) {
+    $(document).ready(function() {
+        var questionTypeField = $('#id_question_type');
+        
+        function toggleOptions() {
+            var selectedType = questionTypeField.val();
+            
+            var optionA = $('.field-option_a');
+            var optionB = $('.field-option_b');
+            var optionC = $('.field-option_c');
+            var optionD = $('.field-option_d');
+            
+            if (selectedType === 'true_false') {
+                optionA.show();
+                optionB.show();
+                optionC.hide();
+                optionD.hide();
+                
+                var optionAInput = $('#id_option_a');
+                var optionBInput = $('#id_option_b');
+                
+                if (!optionAInput.val()) {
+                    optionAInput.val('True');
+                }
+                if (!optionBInput.val()) {
+                    optionBInput.val('False');
+                }
+                
+                $('#id_option_c').val('');
+                $('#id_option_d').val('');
+                
+                optionAInput.attr('placeholder', 'Enter: True');
+                optionBInput.attr('placeholder', 'Enter: False');
+                
+            } else if (selectedType === 'mcq') {
+                optionA.show();
+                optionB.show();
+                optionC.show();
+                optionD.show();
+                
+                $('#id_option_a').attr('placeholder', 'Option A');
+                $('#id_option_b').attr('placeholder', 'Option B');
+                $('#id_option_c').attr('placeholder', 'Option C');
+                $('#id_option_d').attr('placeholder', 'Option D');
+            }
+        }
+        
+        toggleOptions();
+        
+        questionTypeField.change(function() {
+            toggleOptions();
+        });
+    });
+})(django.jQuery);
+</script>
+
+<style>
+    #id_question_type option[value="true_false"] {
+        font-weight: bold;
+        color: #0066cc;
+    }
+    
+    #id_question_type option[value="mcq"] {
+        font-weight: bold;
+        color: #00aa00;
+    }
+    
+    #id_question_type {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 8px;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .field-option_a input,
+    .field-option_b input,
+    .field-option_c input,
+    .field-option_d input {
+        width: 100%;
+        max-width: 600px;
+    }
+    
+    .field-option_a label:before {
+        content: '🅰 ';
+    }
+    
+    .field-option_b label:before {
+        content: '🅱 ';
+    }
+    
+    .field-option_c label:before {
+        content: 'Ⓒ ';
+    }
+    
+    .field-option_d label:before {
+        content: 'Ⓓ ';
+    }
+</style>
+{% endblock %}
