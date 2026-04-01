@@ -1,0 +1,137 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Welcome - Online Quiz Assessment{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="graduation-cap" class="w-8 h-8 text-blue-600"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">OQA System</h1>
+                </div>
+                <a href="/admin/" class="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    <span>Teacher Login</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="container mx-auto px-4 py-16">
+        <div class="max-w-2xl mx-auto text-center" data-aos="fade-up">
+            <!-- Icon -->
+            <div class="mb-8 flex justify-center">
+                <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="file-text" class="w-12 h-12 text-blue-600"></i>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                Welcome to Online Quiz
+            </h2>
+            <p class="text-xl text-gray-600 mb-12">
+                Enter your quiz code to begin your assessment
+            </p>
+
+            <!-- Quiz Code Entry Form -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12" data-aos="fade-up" data-aos-delay="200">
+                <form method="get" id="quizCodeForm" x-data="{ code: '', loading: false }">
+                    <div class="mb-6">
+                        <label for="quiz_code" class="block text-left text-sm font-semibold text-gray-700 mb-2">
+                            <i data-lucide="key" class="w-4 h-4 inline mr-1"></i>
+                            Quiz Code
+                        </label>
+                        <input 
+                            type="text" 
+                            id="quiz_code" 
+                            name="quiz_code"
+                            x-model="code"
+                            placeholder="e.g., QZ-ABC123"
+                            maxlength="10"
+                            required
+                            class="w-full px-6 py-4 text-center text-2xl font-mono uppercase tracking-wider border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+                            @input="code = code.toUpperCase()"
+                        >
+                        <p class="text-sm text-gray-500 mt-2 text-left">
+                            Format: QZ-XXXXXX (e.g., QZ-ABC123)
+                        </p>
+                    </div>
+
+                    <button 
+                        type="submit"
+                        @click="loading = true"
+                        :disabled="loading || code.length < 6"
+                        :class="loading || code.length < 6 ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
+                        class="w-full py-4 px-6 text-white font-semibold rounded-xl shadow-lg transition transform hover:scale-105 flex items-center justify-center space-x-2"
+                    >
+                        <span x-show="!loading">Continue to Quiz</span>
+                        <span x-show="loading" x-cloak>
+                            <i data-lucide="loader" class="w-5 h-5 animate-spin"></i>
+                            <span class="ml-2">Loading...</span>
+                        </span>
+                        <i data-lucide="arrow-right" class="w-5 h-5" x-show="!loading"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Help Text -->
+            <div class="mt-8 text-sm text-gray-500" data-aos="fade-up" data-aos-delay="400">
+                <p class="flex items-center justify-center space-x-2">
+                    <i data-lucide="info" class="w-4 h-4"></i>
+                    <span>Don't have a quiz code? Contact your teacher</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="max-w-4xl mx-auto mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center p-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="clock" class="w-8 h-8 text-green-600"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2">Timed Quizzes</h3>
+                <p class="text-sm text-gray-600">Auto-submission when time expires</p>
+            </div>
+            
+            <div class="text-center p-6" data-aos="fade-up" data-aos-delay="200">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="shield" class="w-8 h-8 text-purple-600"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2">Secure & Fair</h3>
+                <p class="text-sm text-gray-600">Anti-cheat monitoring enabled</p>
+            </div>
+            
+            <div class="text-center p-6" data-aos="fade-up" data-aos-delay="300">
+                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="zap" class="w-8 h-8 text-orange-600"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2">Instant Results</h3>
+                <p class="text-sm text-gray-600">See your score immediately</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-20">
+        <div class="container mx-auto px-4 py-6 text-center text-gray-600 text-sm">
+            <p>&copy; 2026 OQA System. All rights reserved.</p>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // Handle form submission
+    document.getElementById('quizCodeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const code = document.getElementById('quiz_code').value.trim();
+        if (code) {
+            window.location.href = `/${code}/`;
+        }
+    });
+</script>
+{% endblock %}

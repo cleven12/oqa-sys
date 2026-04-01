@@ -1,0 +1,222 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Quiz Results - {{ session.quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="graduation-cap" class="w-8 h-8 text-blue-600"></i>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">Quiz Results</h1>
+                </div>
+                <a href="{% url 'quiz:landing' %}" class="text-gray-600 hover:text-blue-600 transition flex items-center space-x-2">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="hidden md:inline">Home</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-3xl mx-auto">
+            <!-- Result Status Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 text-center" data-aos="zoom-in">
+                {% if session.is_passed %}
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="check-circle" class="w-12 h-12 text-green-600"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-green-600 mb-2">Congratulations!</h2>
+                    <p class="text-xl text-gray-600">You have passed the quiz</p>
+                {% else %}
+                    <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="x-circle" class="w-12 h-12 text-red-600"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-red-600 mb-2">Not Passed</h2>
+                    <p class="text-xl text-gray-600">Keep practicing and try again next time</p>
+                {% endif %}
+            </div>
+
+            <!-- Score Details -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8" data-aos="fade-up" data-aos-delay="100">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i data-lucide="bar-chart-2" class="w-6 h-6 mr-2 text-blue-600"></i>
+                    Your Score
+                </h3>
+
+                <!-- Score Display -->
+                <div class="text-center mb-8">
+                    <div class="inline-block relative">
+                        <svg class="w-48 h-48">
+                            <circle cx="96" cy="96" r="80" stroke="#e5e7eb" stroke-width="12" fill="none"></circle>
+                            <circle 
+                                cx="96" 
+                                cy="96" 
+                                r="80" 
+                                stroke="{% if session.is_passed %}#10b981{% else %}#ef4444{% endif %}" 
+                                stroke-width="12" 
+                                fill="none"
+                                stroke-dasharray="{{ session.percentage_score|floatformat:0 }} 100"
+                                stroke-dashoffset="25"
+                                transform="rotate(-90 96 96)"
+                                class="transition-all duration-1000"
+                            ></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div>
+                                <div class="text-5xl font-bold text-gray-800">{{ session.percentage_score|floatformat:1 }}%</div>
+                                <div class="text-sm text-gray-500 mt-1">{{ session.total_score }} / {{ session.quiz.total_marks }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="p-4 bg-blue-50 rounded-lg text-center">
+                        <i data-lucide="award" class="w-6 h-6 text-blue-600 mx-auto mb-2"></i>
+                        <p class="text-sm text-gray-600">Total Marks</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ session.quiz.total_marks }}</p>
+                    </div>
+                    
+                    <div class="p-4 bg-green-50 rounded-lg text-center">
+                        <i data-lucide="check" class="w-6 h-6 text-green-600 mx-auto mb-2"></i>
+                        <p class="text-sm text-gray-600">Your Score</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ session.total_score }}</p>
+                    </div>
+                    
+                    <div class="p-4 bg-purple-50 rounded-lg text-center">
+                        <i data-lucide="target" class="w-6 h-6 text-purple-600 mx-auto mb-2"></i>
+                        <p class="text-sm text-gray-600">Passing %</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ session.quiz.passing_percentage }}%</p>
+                    </div>
+                    
+                    <div class="p-4 bg-orange-50 rounded-lg text-center">
+                        <i data-lucide="file-text" class="w-6 h-6 text-orange-600 mx-auto mb-2"></i>
+                        <p class="text-sm text-gray-600">Questions</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ session.quiz.total_questions }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Details -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8" data-aos="fade-up" data-aos-delay="200">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i data-lucide="user" class="w-6 h-6 mr-2 text-blue-600"></i>
+                    Student Information
+                </h3>
+
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span class="text-gray-600">Full Name</span>
+                        <span class="font-semibold text-gray-800">{{ session.full_name }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span class="text-gray-600">Registration Number</span>
+                        <span class="font-semibold text-gray-800">{{ session.reg_number }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span class="text-gray-600">Email</span>
+                        <span class="font-semibold text-gray-800">{{ session.email }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span class="text-gray-600">Quiz Code</span>
+                        <span class="font-mono font-semibold text-gray-800">{{ session.quiz.quiz_code }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span class="text-gray-600">Started At</span>
+                        <span class="font-semibold text-gray-800">{{ session.start_time|date:"M d, Y H:i" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-3">
+                        <span class="text-gray-600">Submitted At</span>
+                        <span class="font-semibold text-gray-800">
+                            {% if session.submit_time %}
+                                {{ session.submit_time|date:"M d, Y H:i" }}
+                            {% else %}
+                                Not submitted
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Info -->
+            <div class="bg-white rounded-2xl shadow-lg p-8" data-aos="fade-up" data-aos-delay="300">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i data-lucide="info" class="w-6 h-6 mr-2 text-blue-600"></i>
+                    Quiz Information
+                </h3>
+
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span class="text-gray-600">Quiz Title</span>
+                        <span class="font-semibold text-gray-800">{{ session.quiz.title }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span class="text-gray-600">Duration</span>
+                        <span class="font-semibold text-gray-800">{{ session.quiz.quiz_duration }} minutes</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-3">
+                        <span class="text-gray-600">Status</span>
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold
+                            {% if session.is_passed %}
+                                bg-green-100 text-green-700
+                            {% else %}
+                                bg-red-100 text-red-700
+                            {% endif %}
+                        ">
+                            {% if session.is_passed %}Passed{% else %}Not Passed{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-8 flex justify-center space-x-4" data-aos="fade-up" data-aos-delay="400">
+                <a 
+                    href="{% url 'quiz:landing' %}"
+                    class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition transform hover:scale-105 flex items-center space-x-2"
+                >
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span>Back to Home</span>
+                </a>
+                
+                <button 
+                    onclick="window.print()"
+                    class="px-8 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg shadow-lg transition flex items-center space-x-2"
+                >
+                    <i data-lucide="printer" class="w-5 h-5"></i>
+                    <span>Print Results</span>
+                </button>
+            </div>
+
+            <!-- Note -->
+            <div class="mt-8 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-lg" data-aos="fade-up" data-aos-delay="500">
+                <p class="text-sm text-blue-800 flex items-center">
+                    <i data-lucide="info" class="w-4 h-4 mr-2"></i>
+                    <span>Your results have been recorded. Contact your teacher for detailed feedback.</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print Styles -->
+<style media="print">
+    header, .no-print {
+        display: none !important;
+    }
+    body {
+        background: white !important;
+    }
+</style>
+{% endblock %}

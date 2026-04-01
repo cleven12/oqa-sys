@@ -111,6 +111,13 @@ class Question(models.Model):
         help_text="Per-question timer (optional)"
     )
     order = models.IntegerField(default=0)
+    
+    @property
+    def marks(self):
+        """Get marks for this question from its group"""
+        if self.group:
+            return self.group.marks_per_question
+        return 1  # default if no group
 
     def __str__(self):
         return f"{self.quiz.quiz_code} - Q{self.order}: {self.question_text[:50]}"

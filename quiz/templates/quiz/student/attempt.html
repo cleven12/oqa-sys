@@ -1,0 +1,409 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Quiz in Progress - {{ session.quiz.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styles for quiz interface */
+    .question-nav-btn {
+        @apply w-10 h-10 flex items-center justify-center rounded-lg font-semibold transition;
+    }
+    .question-nav-btn.answered {
+        @apply bg-green-100 text-green-700 border-2 border-green-300;
+    }
+    .question-nav-btn.current {
+        @apply bg-blue-600 text-white ring-4 ring-blue-200;
+    }
+    .question-nav-btn.unanswered {
+        @apply bg-gray-100 text-gray-600 border-2 border-gray-300;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50" x-data="quizApp()" x-init="init()">
+    <!-- Fixed Header with Timer -->
+    <header class="bg-white shadow-md border-b-2 border-blue-500 fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Quiz Title -->
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="file-text" class="w-6 h-6 text-blue-600"></i>
+                    <div>
+                        <h1 class="font-bold text-gray-800 text-lg">{{ session.quiz.title }}</h1>
+                        <p class="text-sm text-gray-500">{{ session.full_name }}</p>
+                    </div>
+                </div>
+
+                <!-- Timer -->
+                <div class="flex items-center space-x-4">
+                    <div class="px-4 py-2 rounded-lg flex items-center space-x-2" 
+                         :class="timeRemaining < 300 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'">
+                        <i data-lucide="clock" class="w-5 h-5"></i>
+                        <span class="font-mono font-bold text-xl" x-text="formatTime(timeRemaining)"></span>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button 
+                        @click="submitQuiz()"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition flex items-center space-x-2"
+                    >
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span class="hidden md:inline">Submit</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content (with top padding for fixed header) -->
+    <div class="pt-24 pb-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Question Panel -->
+                <div class="lg:w-3/4">
+                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <!-- Question Header -->
+                        <div class="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-100">
+                            <h2 class="text-lg font-semibold text-gray-700">
+                                Question <span x-text="currentQuestion + 1"></span> of <span x-text="questions.length"></span>
+                            </h2>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">
+                                <span x-text="questions[currentQuestion]?.marks"></span> marks
+                            </span>
+                        </div>
+
+                        <!-- Question Text -->
+                        <div class="mb-8">
+                            <p class="text-xl text-gray-800 leading-relaxed" x-text="questions[currentQuestion]?.text"></p>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="space-y-3">
+                            <template x-for="(option, idx) in questions[currentQuestion]?.options" :key="idx">
+                                <label 
+                                    class="flex items-start space-x-4 p-4 border-2 rounded-xl cursor-pointer transition hover:bg-gray-50"
+                                    :class="answers[currentQuestion] === option.key ? 'border-blue-500 bg-blue-50' : 'border-gray-200'"
+                                >
+                                    <input 
+                                        type="radio" 
+                                        :name="'question_' + currentQuestion"
+                                        :value="option.key"
+                                        x-model="answers[currentQuestion]"
+                                        @change="saveAnswer()"
+                                        class="mt-1 w-5 h-5 text-blue-600 focus:ring-blue-500"
+                                    >
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-semibold text-gray-700" x-text="option.label"></span>
+                                            <span class="text-gray-600" x-text="option.text"></span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="mt-8 flex items-center justify-between pt-6 border-t-2 border-gray-100">
+                            <button 
+                                @click="previousQuestion()"
+                                :disabled="currentQuestion === 0"
+                                class="px-6 py-3 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 font-semibold rounded-lg transition flex items-center space-x-2"
+                            >
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                                <span>Previous</span>
+                            </button>
+                            
+                            <button 
+                                @click="nextQuestion()"
+                                :disabled="currentQuestion === questions.length - 1"
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center space-x-2"
+                            >
+                                <span>Next</span>
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="lg:w-1/4">
+                    <!-- Question Navigator -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
+                        <h3 class="font-semibold text-gray-800 mb-4 flex items-center">
+                            <i data-lucide="grid-3x3" class="w-5 h-5 mr-2 text-blue-600"></i>
+                            Questions
+                        </h3>
+                        
+                        <div class="grid grid-cols-5 gap-2">
+                            <template x-for="(q, idx) in questions" :key="idx">
+                                <button 
+                                    @click="goToQuestion(idx)"
+                                    class="question-nav-btn"
+                                    :class="{
+                                        'current': idx === currentQuestion,
+                                        'answered': answers[idx] && idx !== currentQuestion,
+                                        'unanswered': !answers[idx] && idx !== currentQuestion
+                                    }"
+                                    x-text="idx + 1"
+                                ></button>
+                            </template>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="mt-6 space-y-2 text-sm">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-green-100 border-2 border-green-300 rounded"></div>
+                                <span class="text-gray-600">Answered</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-gray-100 border-2 border-gray-300 rounded"></div>
+                                <span class="text-gray-600">Not Answered</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-4 h-4 bg-blue-600 rounded"></div>
+                                <span class="text-gray-600">Current</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress -->
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                                <span>Progress</span>
+                                <span x-text="Math.round((Object.keys(answers).length / questions.length) * 100) + '%'"></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                    class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    :style="'width: ' + ((Object.keys(answers).length / questions.length) * 100) + '%'"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning Modal (Tab Switch/Window Blur) -->
+    <div x-show="showWarning" 
+         x-cloak
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         @click.self="showWarning = false"
+    >
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md" @click.away="showWarning = false">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">Warning!</h3>
+            </div>
+            <p class="text-gray-600 mb-6">
+                Tab switching or window blur has been detected and logged. Multiple violations may result in quiz invalidation.
+            </p>
+            <button 
+                @click="showWarning = false"
+                class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"
+            >
+                I Understand
+            </button>
+        </div>
+    </div>
+
+    <!-- Submit Confirmation Modal -->
+    <div x-show="showSubmitModal" 
+         x-cloak
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-blue-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">Submit Quiz?</h3>
+            </div>
+            <p class="text-gray-600 mb-2">
+                You have answered <strong x-text="Object.keys(answers).length"></strong> out of <strong x-text="questions.length"></strong> questions.
+            </p>
+            <p class="text-gray-600 mb-6">
+                Are you sure you want to submit? This action cannot be undone.
+            </p>
+            <div class="flex space-x-3">
+                <button 
+                    @click="showSubmitModal = false"
+                    class="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg"
+                >
+                    Cancel
+                </button>
+                <button 
+                    @click="confirmSubmit()"
+                    class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg"
+                >
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function quizApp() {
+    return {
+        // State
+        sessionId: {{ session.id }},
+        currentQuestion: 0,
+        timeRemaining: 3600, // Will be updated from server
+        questions: [],
+        answers: {},
+        showWarning: false,
+        showSubmitModal: false,
+        heartbeatInterval: null,
+        
+        // Initialize
+        init() {
+            this.loadQuestions();
+            this.startTimer();
+            this.startHeartbeat();
+            this.setupAntiCheat();
+            lucide.createIcons();
+        },
+        
+        // Load questions from server (placeholder)
+        loadQuestions() {
+            // TODO: Will be loaded via API in next phase
+            // For now, using dummy data
+            this.questions = [
+                {
+                    id: 1,
+                    text: "What is the capital of France?",
+                    marks: 2,
+                    options: [
+                        { key: 'option_a', label: 'A)', text: 'London' },
+                        { key: 'option_b', label: 'B)', text: 'Paris' },
+                        { key: 'option_c', label: 'C)', text: 'Berlin' },
+                        { key: 'option_d', label: 'D)', text: 'Madrid' }
+                    ]
+                },
+                {
+                    id: 2,
+                    text: "Django is a Python web framework. True or False?",
+                    marks: 1,
+                    options: [
+                        { key: 'option_a', label: 'A)', text: 'True' },
+                        { key: 'option_b', label: 'B)', text: 'False' }
+                    ]
+                }
+            ];
+        },
+        
+        // Timer
+        startTimer() {
+            this.heartbeatInterval = setInterval(() => {
+                if (this.timeRemaining > 0) {
+                    this.timeRemaining--;
+                } else {
+                    this.autoSubmit();
+                }
+            }, 1000);
+        },
+        
+        formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        },
+        
+        // Heartbeat (sync with server)
+        startHeartbeat() {
+            setInterval(() => {
+                // TODO: API call to sync time and auto-save
+                console.log('Heartbeat ping');
+            }, 10000); // Every 10 seconds
+        },
+        
+        // Navigation
+        nextQuestion() {
+            if (this.currentQuestion < this.questions.length - 1) {
+                this.currentQuestion++;
+                lucide.createIcons();
+            }
+        },
+        
+        previousQuestion() {
+            if (this.currentQuestion > 0) {
+                this.currentQuestion--;
+                lucide.createIcons();
+            }
+        },
+        
+        goToQuestion(idx) {
+            this.currentQuestion = idx;
+            lucide.createIcons();
+        },
+        
+        // Save answer
+        saveAnswer() {
+            // TODO: API call to save answer
+            console.log('Answer saved:', this.answers[this.currentQuestion]);
+        },
+        
+        // Submit
+        submitQuiz() {
+            this.showSubmitModal = true;
+        },
+        
+        confirmSubmit() {
+            // TODO: API call to submit quiz
+            clearInterval(this.heartbeatInterval);
+            window.location.href = `/session/${this.sessionId}/result/`;
+        },
+        
+        autoSubmit() {
+            clearInterval(this.heartbeatInterval);
+            alert('Time is up! Quiz will be auto-submitted.');
+            this.confirmSubmit();
+        },
+        
+        // Anti-cheat monitoring
+        setupAntiCheat() {
+            // Tab visibility change
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    this.logSuspicion('tab_switch');
+                    this.showWarning = true;
+                }
+            });
+            
+            // Window blur
+            window.addEventListener('blur', () => {
+                this.logSuspicion('window_blur');
+            });
+            
+            // Copy prevention
+            document.addEventListener('copy', (e) => {
+                e.preventDefault();
+                this.logSuspicion('copy_attempt');
+                this.showWarning = true;
+            });
+            
+            // Paste prevention
+            document.addEventListener('paste', (e) => {
+                e.preventDefault();
+                this.logSuspicion('paste_attempt');
+            });
+            
+            // Right-click prevention
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+        },
+        
+        logSuspicion(eventType) {
+            // TODO: API call to log suspicious event
+            console.log('Suspicious event:', eventType);
+        }
+    };
+}
+</script>
+{% endblock %}

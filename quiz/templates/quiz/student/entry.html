@@ -1,0 +1,194 @@
+{% extends 'quiz/base.html' %}
+
+{% block title %}Enter Your Details - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="graduation-cap" class="w-8 h-8 text-blue-600"></i>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">{{ quiz.title }}</h1>
+                </div>
+                <a href="{% url 'quiz:landing' %}" class="text-gray-600 hover:text-blue-600 transition flex items-center space-x-2">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    <span class="hidden md:inline">Back</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-2xl mx-auto">
+            <!-- Quiz Info Card -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8" data-aos="fade-up">
+                <div class="flex items-start space-x-4 mb-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="info" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Quiz Information</h2>
+                        <p class="text-gray-600">{{ quiz.description|default:"Please read the instructions carefully before starting." }}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div class="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                        <i data-lucide="clock" class="w-5 h-5 text-gray-600"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Duration</p>
+                            <p class="font-semibold text-gray-800">{{ quiz.quiz_duration }} minutes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                        <i data-lucide="file-text" class="w-5 h-5 text-gray-600"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Total Questions</p>
+                            <p class="font-semibold text-gray-800">{{ quiz.total_questions }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                        <i data-lucide="target" class="w-5 h-5 text-gray-600"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Passing Score</p>
+                            <p class="font-semibold text-gray-800">{{ quiz.passing_percentage }}%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                        <i data-lucide="award" class="w-5 h-5 text-gray-600"></i>
+                        <div>
+                            <p class="text-sm text-gray-500">Total Marks</p>
+                            <p class="font-semibold text-gray-800">{{ quiz.total_marks }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Entry Form -->
+            <div class="bg-white rounded-2xl shadow-lg p-8" data-aos="fade-up" data-aos-delay="200">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i data-lucide="user" class="w-6 h-6 mr-2 text-blue-600"></i>
+                    Enter Your Details
+                </h3>
+
+                <form method="POST" action="{% url 'quiz:start_quiz' quiz.quiz_code %}" x-data="{ loading: false }">
+                    {% csrf_token %}
+                    
+                    {% if messages %}
+                        <div class="mb-6">
+                            {% for message in messages %}
+                                <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="{% if message.tags == 'error' %}alert-circle{% else %}info{% endif %}" class="w-5 h-5"></i>
+                                        <span>{{ message }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="space-y-5">
+                        <!-- Full Name -->
+                        <div>
+                            <label for="full_name" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i data-lucide="user" class="w-4 h-4 inline mr-1"></i>
+                                Full Name *
+                            </label>
+                            <input 
+                                type="text" 
+                                id="full_name" 
+                                name="full_name" 
+                                required
+                                placeholder="Enter your full name"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+                            >
+                        </div>
+
+                        <!-- Registration Number -->
+                        <div>
+                            <label for="reg_number" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i data-lucide="hash" class="w-4 h-4 inline mr-1"></i>
+                                Registration Number *
+                            </label>
+                            <input 
+                                type="text" 
+                                id="reg_number" 
+                                name="reg_number" 
+                                required
+                                placeholder="e.g., 2024/CS/001"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+                            >
+                            <p class="text-sm text-gray-500 mt-1">
+                                You cannot retake this quiz with the same registration number
+                            </p>
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i data-lucide="mail" class="w-4 h-4 inline mr-1"></i>
+                                Email Address *
+                            </label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                required
+                                placeholder="your.email@example.com"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Rules & Regulations -->
+                    <div class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+                        <h4 class="font-semibold text-yellow-800 mb-2 flex items-center">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
+                            Important Rules
+                        </h4>
+                        <ul class="text-sm text-yellow-700 space-y-1 ml-7">
+                            <li>• Once started, the timer cannot be paused</li>
+                            <li>• Switching tabs will be monitored</li>
+                            <li>• Your answers are auto-saved every 10 seconds</li>
+                            <li>• Quiz will auto-submit when time expires</li>
+                            <li>• You cannot retake this quiz</li>
+                        </ul>
+                    </div>
+
+                    <!-- Consent Checkbox -->
+                    <div class="mt-6">
+                        <label class="flex items-start space-x-3 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                name="accept_rules" 
+                                required
+                                class="mt-1 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            >
+                            <span class="text-sm text-gray-700">
+                                I have read and agree to follow all the rules and regulations. I understand that my activity will be monitored for academic integrity.
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button 
+                        type="submit"
+                        @click="loading = true"
+                        :disabled="loading"
+                        class="w-full mt-8 py-4 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-lg transition transform hover:scale-105 flex items-center justify-center space-x-2"
+                    >
+                        <span x-show="!loading">Start Quiz</span>
+                        <span x-show="loading" x-cloak>Starting...</span>
+                        <i data-lucide="play-circle" class="w-5 h-5" x-show="!loading"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
