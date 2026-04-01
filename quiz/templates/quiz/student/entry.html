@@ -39,7 +39,7 @@
                         <i data-lucide="clock" class="w-5 h-5 text-gray-600"></i>
                         <div>
                             <p class="text-sm text-gray-500">Duration</p>
-                            <p class="font-semibold text-gray-800">{{ quiz.quiz_duration }} minutes</p>
+                            <p class="font-semibold text-gray-800">{{ quiz.quiz_duration|divisibleby:60 }} minutes</p>
                         </div>
                     </div>
                     

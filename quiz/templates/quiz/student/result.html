@@ -137,8 +137,8 @@
                     <div class="flex items-center justify-between py-3">
                         <span class="text-gray-600">Submitted At</span>
                         <span class="font-semibold text-gray-800">
-                            {% if session.submit_time %}
-                                {{ session.submit_time|date:"M d, Y H:i" }}
+                            {% if session.submitted_at %}
+                                {{ session.submitted_at|date:"M d, Y H:i" }}
                             {% else %}
                                 Not submitted
                             {% endif %}

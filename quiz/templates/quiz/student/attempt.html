@@ -252,53 +252,55 @@ function quizApp() {
         // State
         sessionId: {{ session.id }},
         currentQuestion: 0,
-        timeRemaining: 3600, // Will be updated from server
+        timeRemaining: 0,
         questions: [],
         answers: {},
         showWarning: false,
         showSubmitModal: false,
+        timerInterval: null,
         heartbeatInterval: null,
+        loading: true,
         
         // Initialize
-        init() {
-            this.loadQuestions();
+        async init() {
+            await this.loadQuestions();
             this.startTimer();
             this.startHeartbeat();
             this.setupAntiCheat();
             lucide.createIcons();
         },
         
-        // Load questions from server (placeholder)
-        loadQuestions() {
-            // TODO: Will be loaded via API in next phase
-            // For now, using dummy data
-            this.questions = [
-                {
-                    id: 1,
-                    text: "What is the capital of France?",
-                    marks: 2,
-                    options: [
-                        { key: 'option_a', label: 'A)', text: 'London' },
-                        { key: 'option_b', label: 'B)', text: 'Paris' },
-                        { key: 'option_c', label: 'C)', text: 'Berlin' },
-                        { key: 'option_d', label: 'D)', text: 'Madrid' }
-                    ]
-                },
-                {
-                    id: 2,
-                    text: "Django is a Python web framework. True or False?",
-                    marks: 1,
-                    options: [
-                        { key: 'option_a', label: 'A)', text: 'True' },
-                        { key: 'option_b', label: 'B)', text: 'False' }
-                    ]
+        // Load questions from api
+        async loadQuestions() {
+            try {
+                const response = await fetch(`/api/session/${this.sessionId}/questions/`);
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    this.questions = data.questions;
+                    this.timeRemaining = data.time_remaining;
+                    
+                    // load existing anwsers if any
+                    this.questions.forEach((q, idx) => {
+                        if (q.chosen_answer) {
+                            this.answers[idx] = q.chosen_answer;
+                        }
+                    });
+                    
+                    this.loading = false;
+                    console.log('Questions loaded:', this.questions.length);
+                } else {
+                    alert('Error loading questions');
                 }
-            ];
+            } catch (error) {
+                console.error('Failed to load questions:', error);
+                alert('Failed to load quiz. Please refresh page.');
+            }
         },
         
         // Timer
         startTimer() {
-            this.heartbeatInterval = setInterval(() => {
+            this.timerInterval = setInterval(() => {
                 if (this.timeRemaining > 0) {
                     this.timeRemaining--;
                 } else {
@@ -314,12 +316,32 @@ function quizApp() {
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         },
         
-        // Heartbeat (sync with server)
+        // Heartbeat sync with server
         startHeartbeat() {
-            setInterval(() => {
-                // TODO: API call to sync time and auto-save
-                console.log('Heartbeat ping');
-            }, 10000); // Every 10 seconds
+            this.heartbeatInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/heartbeat/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: this.sessionId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'auto_submitted') {
+                        // server auto submited
+                        clearInterval(this.timerInterval);
+                        clearInterval(this.heartbeatInterval);
+                        alert(data.message);
+                        window.location.href = `/session/${this.sessionId}/result/`;
+                    } else if (data.status === 'ok') {
+                        // sync time
+                        this.timeRemaining = data.time_remaining;
+                    }
+                } catch (error) {
+                    console.error('Heartbeat failed:', error);
+                }
+            }, 10000);
         },
         
         // Navigation
@@ -342,10 +364,32 @@ function quizApp() {
             lucide.createIcons();
         },
         
-        // Save answer
-        saveAnswer() {
-            // TODO: API call to save answer
-            console.log('Answer saved:', this.answers[this.currentQuestion]);
+        // Save answer to api
+        async saveAnswer() {
+            const questionId = this.questions[this.currentQuestion].id;
+            const chosenAnswer = this.answers[this.currentQuestion];
+            
+            if (!chosenAnswer) return;
+            
+            try {
+                const response = await fetch(`/api/session/${this.sessionId}/save-answer/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question_id: questionId,
+                        chosen_answer: chosenAnswer,
+                        time_taken: 0
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'saved') {
+                    console.log('Answer saved:', data.is_correct ? 'Correct' : 'Wrong');
+                }
+            } catch (error) {
+                console.error('Failed to save answer:', error);
+            }
         },
         
         // Submit
@@ -353,21 +397,35 @@ function quizApp() {
             this.showSubmitModal = true;
         },
         
-        confirmSubmit() {
-            // TODO: API call to submit quiz
+        async confirmSubmit() {
+            clearInterval(this.timerInterval);
             clearInterval(this.heartbeatInterval);
-            window.location.href = `/session/${this.sessionId}/result/`;
+            
+            // submit via form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/session/${this.sessionId}/submit/`;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
         },
         
         autoSubmit() {
+            clearInterval(this.timerInterval);
             clearInterval(this.heartbeatInterval);
             alert('Time is up! Quiz will be auto-submitted.');
-            this.confirmSubmit();
+            window.location.href = `/session/${this.sessionId}/result/`;
         },
         
-        // Anti-cheat monitoring
+        // Anti-cheat
         setupAntiCheat() {
-            // Tab visibility change
+            // Tab switch
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
                     this.logSuspicion('tab_switch');
@@ -393,15 +451,27 @@ function quizApp() {
                 this.logSuspicion('paste_attempt');
             });
             
-            // Right-click prevention
+            // Right-click
             document.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
             });
         },
         
-        logSuspicion(eventType) {
-            // TODO: API call to log suspicious event
-            console.log('Suspicious event:', eventType);
+        // Log to api
+        async logSuspicion(eventType) {
+            try {
+                await fetch(`/api/session/${this.sessionId}/log-suspicion/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event_type: eventType,
+                        question_index: this.currentQuestion
+                    })
+                });
+                console.log('Suspicious event logged:', eventType);
+            } catch (error) {
+                console.error('Failed to log suspicion:', error);
+            }
         }
     };
 }
