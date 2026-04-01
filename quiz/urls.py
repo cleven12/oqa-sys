@@ -44,5 +44,6 @@ urlpatterns = [
     path('api/heartbeat/', api.heartbeat, name='api_heartbeat'),
     path('api/session/<int:session_id>/save-answer/', api.save_answer, name='api_save_answer'),
     path('api/session/<int:session_id>/log-suspicion/', api.log_suspicion, name='api_log_suspicion'),
+    path('api/session/<int:session_id>/questions/', api.get_questions, name='api_get_questions'),
     path('api/quiz/<int:quiz_id>/live-sessions/', api.live_sessions, name='api_live_sessions'),
 ]
