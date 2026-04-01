@@ -1,5 +1,97 @@
 from django.contrib import admin
+from django.db import models
+from django import forms
 from .models import Quiz, QuestionGroup, Question, StudentSession, Answer, SuspiciousEvent
+
+
+class QuestionAdminForm(forms.ModelForm):
+    """Custom form for Question admin with dynamic field handling"""
+    
+    # Override correct_answer as a ChoiceField (dynamically populated)
+    correct_answer = forms.ChoiceField(
+        choices=[],
+        help_text='Select the correct answer from available options'
+    )
+    
+    class Meta:
+        model = Question
+        fields = '__all__'
+        widgets = {
+            'question_text': forms.Textarea(attrs={'rows': 4, 'cols': 80}),
+            'option_a': forms.TextInput(attrs={'size': 60}),
+            'option_b': forms.TextInput(attrs={'size': 60}),
+            'option_c': forms.TextInput(attrs={'size': 60}),
+            'option_d': forms.TextInput(attrs={'size': 60}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Get the current question type (from instance if editing, or from POST data if creating)
+        question_type = None
+        if self.instance and self.instance.pk:
+            question_type = self.instance.question_type
+        elif self.data:
+            question_type = self.data.get('question_type')
+        
+        # Set correct_answer choices based on question type
+        if question_type == 'true_false':
+            self.fields['correct_answer'].choices = [
+                ('', '---------'),
+                ('option_a', 'Option A (True)'),
+                ('option_b', 'Option B (False)'),
+            ]
+        elif question_type == 'mcq':
+            self.fields['correct_answer'].choices = [
+                ('', '---------'),
+                ('option_a', 'Option A'),
+                ('option_b', 'Option B'),
+                ('option_c', 'Option C'),
+                ('option_d', 'Option D'),
+            ]
+        else:
+            # Default choices (all options)
+            self.fields['correct_answer'].choices = [
+                ('', '---------'),
+                ('option_a', 'Option A'),
+                ('option_b', 'Option B'),
+                ('option_c', 'Option C'),
+                ('option_d', 'Option D'),
+            ]
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        question_type = cleaned_data.get('question_type')
+        option_a = cleaned_data.get('option_a')
+        option_b = cleaned_data.get('option_b')
+        option_c = cleaned_data.get('option_c')
+        option_d = cleaned_data.get('option_d')
+        correct_answer = cleaned_data.get('correct_answer')
+
+        if question_type == 'mcq':
+            # MCQ requires all 4 options
+            if not all([option_a, option_b, option_c, option_d]):
+                raise forms.ValidationError('Multiple Choice questions require all 4 options (A, B, C, D)')
+        
+        elif question_type == 'true_false':
+            # True/False requires only option_a and option_b
+            if not option_a or not option_b:
+                raise forms.ValidationError('True/False questions require option A (True) and option B (False)')
+            
+            # Auto-clear options C and D for true/false
+            cleaned_data['option_c'] = None
+            cleaned_data['option_d'] = None
+
+        # Validate correct answer
+        if correct_answer:
+            valid_options = ['option_a', 'option_b']
+            if question_type == 'mcq':
+                valid_options.extend(['option_c', 'option_d'])
+            
+            if correct_answer not in valid_options:
+                raise forms.ValidationError(f'Correct answer must be one of: {", ".join(valid_options)}')
+
+        return cleaned_data
 
 
 @admin.register(Quiz)
@@ -40,7 +132,7 @@ class QuestionGroupAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('quiz', 'name', 'order')
         }),
-        ('Question Selection', {
+        ('Question Selection & Scoring', {
             'fields': ('pick_count', 'marks_per_question'),
             'description': 'Define how many questions to randomly pick from this group and their marks'
         }),
@@ -49,45 +141,46 @@ class QuestionGroupAdmin(admin.ModelAdmin):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ['quiz', 'question_type', 'question_text_short', 'group', 'correct_answer', 'order']
+    form = QuestionAdminForm
+    change_form_template = 'admin/quiz/question/change_form.html'
+    
+    list_display = ['question_text_short', 'question_type_display', 'quiz', 'group', 'correct_answer', 'order']
     list_filter = ['question_type', 'quiz', 'group']
     search_fields = ['question_text', 'quiz__title']
     list_editable = ['order']
+    ordering = ['quiz', 'order']
     
     fieldsets = (
         ('Question Details', {
-            'fields': ('quiz', 'group', 'question_type', 'question_text', 'order')
+            'fields': ('quiz', 'group', 'question_type', 'question_text', 'order'),
+            'description': 'Select question type first - it will show/hide relevant fields automatically'
         }),
         ('Answer Options', {
             'fields': ('option_a', 'option_b', 'option_c', 'option_d'),
-            'description': 'For MCQ: Fill all 4 options. For True/False: Use only option_a (True) and option_b (False)'
+            'description': 'MCQ: Fill all 4 options | True/False: Only A and B will be shown'
         }),
         ('Correct Answer', {
             'fields': ('correct_answer',),
-            'description': 'Enter: option_a, option_b, option_c, or option_d'
+            'description': 'Select the correct answer from the dropdown'
         }),
-        ('Timer (Optional)', {
+        ('Advanced Settings', {
             'fields': ('duration_seconds',),
             'classes': ('collapse',),
-            'description': 'Set per-question timer in seconds (leave blank for no timer)'
+            'description': 'Optional: Set per-question timer in seconds'
         }),
     )
     
     def question_text_short(self, obj):
-        return obj.question_text[:50] + '...' if len(obj.question_text) > 50 else obj.question_text
+        return obj.question_text[:60] + '...' if len(obj.question_text) > 60 else obj.question_text
     question_text_short.short_description = 'Question'
     
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        
-        # Add helpful text for true/false questions
-        if obj and obj.question_type == 'true_false':
-            form.base_fields['option_a'].help_text = 'Enter: True'
-            form.base_fields['option_b'].help_text = 'Enter: False'
-            form.base_fields['option_c'].help_text = 'Leave blank for True/False questions'
-            form.base_fields['option_d'].help_text = 'Leave blank for True/False questions'
-        
-        return form
+    def question_type_display(self, obj):
+        type_colors = {
+            'mcq': '🔵 MCQ',
+            'true_false': '🟢 True/False'
+        }
+        return type_colors.get(obj.question_type, obj.question_type)
+    question_type_display.short_description = 'Type'
 
 
 @admin.register(StudentSession)
