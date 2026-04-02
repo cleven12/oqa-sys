@@ -4,8 +4,10 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 
 
-def export_to_csv(quiz, sessions):
+def export_quiz_results(quiz):
     """Export quiz results to CSV"""
+    sessions = quiz.sessions.filter(is_submitted=True)
+    
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{quiz.quiz_code}_results.csv"'
     
@@ -29,18 +31,18 @@ def export_to_csv(quiz, sessions):
     return response
 
 
-def generate_template(quiz):
+def generate_import_template():
     """Generate Excel template for bulk question import"""
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = f'attachment; filename="{quiz.quiz_code}_template.xlsx"'
+    response['Content-Disposition'] = 'attachment; filename="question_import_template.xlsx"'
     
     wb = Workbook()
     ws = wb.active
     ws.title = "Questions"
     
-    # Updated headers (removed max_attempts, moved group_name)
+    # Headers
     headers = ['question_text', 'type', 'option_a', 'option_b', 'option_c', 'option_d', 
                'correct_answer', 'duration_seconds', 'group_name']
     ws.append(headers)
@@ -73,3 +75,13 @@ def generate_template(quiz):
     
     wb.save(response)
     return response
+
+
+def export_to_csv(quiz, sessions):
+    """Legacy function - use export_quiz_results instead"""
+    return export_quiz_results(quiz)
+
+
+def generate_template(quiz):
+    """Legacy function - use generate_import_template instead"""
+    return generate_import_template()

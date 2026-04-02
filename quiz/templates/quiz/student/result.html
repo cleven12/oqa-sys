@@ -49,7 +49,7 @@
                 <!-- Score Display -->
                 <div class="text-center mb-8">
                     <div class="inline-block relative">
-                        <svg class="w-48 h-48">
+                        <svg class="w-48 h-48" viewBox="0 0 192 192">
                             <circle cx="96" cy="96" r="80" stroke="#e5e7eb" stroke-width="12" fill="none"></circle>
                             <circle 
                                 cx="96" 
@@ -58,8 +58,8 @@
                                 stroke="{% if session.is_passed %}#10b981{% else %}#ef4444{% endif %}" 
                                 stroke-width="12" 
                                 fill="none"
-                                stroke-dasharray="{{ session.percentage_score|floatformat:0 }} 100"
-                                stroke-dashoffset="25"
+                                stroke-dasharray="{% widthratio session.percentage_score 100 502 %} 502"
+                                stroke-dashoffset="125"
                                 transform="rotate(-90 96 96)"
                                 class="transition-all duration-1000"
                             ></circle>
@@ -137,8 +137,8 @@
                     <div class="flex items-center justify-between py-3">
                         <span class="text-gray-600">Submitted At</span>
                         <span class="font-semibold text-gray-800">
-                            {% if session.submit_time %}
-                                {{ session.submit_time|date:"M d, Y H:i" }}
+                            {% if session.submitted_at %}
+                                {{ session.submitted_at|date:"M d, Y H:i" }}
                             {% else %}
                                 Not submitted
                             {% endif %}
@@ -162,7 +162,7 @@
                     
                     <div class="flex items-center justify-between py-3 border-b border-gray-100">
                         <span class="text-gray-600">Duration</span>
-                        <span class="font-semibold text-gray-800">{{ session.quiz.quiz_duration }} minutes</span>
+                        <span class="font-semibold text-gray-800">{% widthratio session.quiz.quiz_duration 60 1 %} minutes</span>
                     </div>
                     
                     <div class="flex items-center justify-between py-3">
@@ -179,6 +179,42 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Answer Breakdown (auto_quiz timeout only) -->
+            {% if answers_breakdown %}
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8" data-aos="fade-up" data-aos-delay="350">
+                <h3 class="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                    <i data-lucide="list-checks" class="w-6 h-6 mr-2 text-blue-600"></i>
+                    Question Breakdown
+                </h3>
+                <p class="text-sm text-gray-500 mb-6">Time expired — here's how you did per question. Correct answers are not shown.</p>
+                <div class="space-y-3">
+                    {% for answer in answers_breakdown %}
+                    <div class="flex items-center justify-between p-4 rounded-xl border
+                        {% if answer.is_correct %}border-green-200 bg-green-50
+                        {% elif answer.chosen_answer %}border-red-200 bg-red-50
+                        {% else %}border-gray-200 bg-gray-50{% endif %}">
+                        <div class="flex items-center space-x-3">
+                            {% if answer.is_correct %}
+                                <i data-lucide="check-circle" class="w-5 h-5 text-green-600 flex-shrink-0"></i>
+                            {% elif answer.chosen_answer %}
+                                <i data-lucide="x-circle" class="w-5 h-5 text-red-500 flex-shrink-0"></i>
+                            {% else %}
+                                <i data-lucide="minus-circle" class="w-5 h-5 text-gray-400 flex-shrink-0"></i>
+                            {% endif %}
+                            <span class="text-sm text-gray-700">Q{{ forloop.counter }}: {{ answer.question.question_text|truncatechars:70 }}</span>
+                        </div>
+                        <span class="text-sm font-semibold flex-shrink-0
+                            {% if answer.is_correct %}text-green-600
+                            {% elif answer.chosen_answer %}text-red-500
+                            {% else %}text-gray-400{% endif %}">
+                            {% if answer.is_correct %}+{{ answer.marks_awarded }}{% elif answer.chosen_answer %}0{% else %}—{% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Actions -->
             <div class="mt-8 flex justify-center space-x-4" data-aos="fade-up" data-aos-delay="400">

@@ -45,6 +45,26 @@ class Quiz(models.Model):
             if not Quiz.objects.filter(quiz_code=code).exists():
                 return code
 
+    @property
+    def total_questions(self):
+        """Get total number of questions in this quiz"""
+        return self.questions.count()
+    
+    @property
+    def total_marks(self):
+        """Calculate total marks for all questions in this quiz"""
+        return sum(q.marks for q in self.questions.all())
+    
+    @property
+    def passing_percentage(self):
+        """Alias for pass_mark to match template usage"""
+        return self.pass_mark
+    
+    @property
+    def quiz_duration_minutes(self):
+        """Get quiz duration in minutes for display"""
+        return self.quiz_duration // 60
+
     def __str__(self):
         return f"{self.quiz_code} - {self.title}"
 
