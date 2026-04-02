@@ -25,7 +25,7 @@ def heartbeat(request):
         
         session = get_object_or_404(StudentSession, id=session_id)
         
-        # check if already submited
+        # check if already submitted
         if session.is_submitted:
             return JsonResponse({
                 'status': 'submitted',
@@ -34,7 +34,7 @@ def heartbeat(request):
                 'message': 'Quiz already submitted'
             })
         
-        # calculate time remainig
+        # calculate time remaining
         time_remaining = calculate_time_remaining(session)
         is_expired = time_remaining <= 0
         
@@ -75,7 +75,7 @@ def save_answer(request, session_id):
     try:
         session = get_object_or_404(StudentSession, id=session_id)
         
-        # cant save if already submited
+        # can't save if already submitted
         if session.is_submitted:
             return JsonResponse({'error': 'Quiz already submitted'}, status=400)
         
@@ -154,7 +154,7 @@ def log_suspicion(request, session_id):
             details=details
         )
         
-        # count total suspicous events for this sesion
+        # count total suspicious events for this session
         total_events = session.suspicious_events.count()
         
         return JsonResponse({
@@ -231,7 +231,7 @@ def get_questions(request, session_id):
     try:
         session = get_object_or_404(StudentSession, id=session_id)
         
-        # check if already submited
+        # check if already submitted
         if session.is_submitted:
             return JsonResponse({'error': 'Quiz already submitted'}, status=400)
         

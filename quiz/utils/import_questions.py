@@ -3,6 +3,28 @@ from ..models import Question, QuestionGroup
 
 VALID_TYPES = ('mcq', 'true_false')
 
+
+def import_questions_from_file(file, quiz):
+    """
+    Import questions from Excel (.xlsx) or CSV file
+    Returns dict with status, imported count, and errors
+    """
+    result = import_from_excel(file, quiz)
+    
+    if result['created'] > 0:
+        return {
+            'status': 'success',
+            'imported': result['created'],
+            'errors': result.get('errors', [])
+        }
+    else:
+        return {
+            'status': 'error',
+            'message': '; '.join(result.get('errors', ['No questions imported'])),
+            'imported': 0
+        }
+
+
 def import_from_excel(file, quiz):
     errors = []
     created = 0
