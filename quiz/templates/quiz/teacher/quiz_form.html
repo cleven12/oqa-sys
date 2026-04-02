@@ -1,0 +1,90 @@
+{% extends 'quiz/base.html' %}
+{% block title %}{% if quiz %}Edit Quiz{% else %}Create Quiz{% endif %}{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <i data-lucide="plus-circle" class="w-6 h-6 text-blue-600"></i>
+        <h1 class="text-xl font-bold text-gray-800">{% if quiz %}Edit Quiz{% else %}Create New Quiz{% endif %}</h1>
+      </div>
+      <a href="{% url 'quiz:teacher_dashboard' %}" class="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i><span>Dashboard</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-8 max-w-2xl">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-green-50 text-green-800 border border-green-200{% endif %}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="bg-white rounded-2xl shadow-lg p-8" data-aos="fade-up">
+      <form method="POST" x-data="{loading:false}">
+        {% csrf_token %}
+        <div class="space-y-6">
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Quiz Title *</label>
+            <input type="text" name="title" value="{{ quiz.title|default:form_data.title|default:'' }}" required
+              placeholder="e.g. Biology CAT 1 - 2025"
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Description (optional)</label>
+            <textarea name="description" rows="3" placeholder="Instructions or notes for students..."
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">{{ quiz.description|default:'' }}</textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Duration (minutes) *</label>
+              <input type="number" name="quiz_duration" min="1" max="300"
+                value="{{ quiz.quiz_duration_min|default:form_data.quiz_duration|default:'30' }}" required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Pass Mark (%) *</label>
+              <input type="number" name="pass_mark" min="0" max="100"
+                value="{{ quiz.pass_mark|default:form_data.pass_mark|default:'50' }}" required
+                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Timer Mode</label>
+            <select name="timer_mode" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+              <option value="quiz" {% if quiz.timer_mode == 'quiz' or not quiz %}selected{% endif %}>Quiz Timer Only (one countdown for whole quiz)</option>
+              <option value="question" {% if quiz.timer_mode == 'question' %}selected{% endif %}>Per-Question Timer Only</option>
+              <option value="both" {% if quiz.timer_mode == 'both' %}selected{% endif %}>Both (quiz + per-question)</option>
+            </select>
+          </div>
+
+          <div class="flex space-x-6">
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" name="randomize_questions" {% if not quiz or quiz.randomize_questions %}checked{% endif %}
+                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+              <span class="text-sm font-medium text-gray-700">Randomize question order</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" name="randomize_choices" {% if not quiz or quiz.randomize_choices %}checked{% endif %}
+                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+              <span class="text-sm font-medium text-gray-700">Randomize MCQ choices</span>
+            </label>
+          </div>
+
+        </div>
+
+        <button type="submit" @click="loading=true" :disabled="loading"
+          class="w-full mt-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-xl transition flex items-center justify-center space-x-2">
+          <i data-lucide="save" class="w-5 h-5" x-show="!loading"></i>
+          <span x-text="loading ? 'Saving...' : '{% if quiz %}Update Quiz{% else %}Create Quiz{% endif %}'"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

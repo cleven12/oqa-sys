@@ -1,0 +1,147 @@
+{% extends 'quiz/base.html' %}
+{% block title %}Live Monitor - {{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <i data-lucide="monitor" class="w-6 h-6 text-green-600"></i>
+        <div>
+          <h1 class="text-xl font-bold text-gray-800">Live Monitor</h1>
+          <p class="text-sm text-gray-500">{{ quiz.title }} · <span class="font-mono">{{ quiz.quiz_code }}</span></p>
+        </div>
+      </div>
+      <a href="{% url 'quiz:teacher_dashboard' %}" class="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i><span>Dashboard</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-8"
+    x-data="monitorApp()"
+    x-init="init()">
+
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-xl p-4 shadow-sm text-center">
+        <p class="text-3xl font-bold text-green-600" x-text="sessions.length"></p>
+        <p class="text-sm text-gray-500 mt-1">Active Now</p>
+      </div>
+      <div class="bg-white rounded-xl p-4 shadow-sm text-center">
+        <p class="text-3xl font-bold text-blue-600" x-text="submitted"></p>
+        <p class="text-sm text-gray-500 mt-1">Submitted</p>
+      </div>
+      <div class="bg-white rounded-xl p-4 shadow-sm text-center flex flex-col items-center justify-center">
+        <div class="flex items-center space-x-2">
+          <div class="w-2 h-2 rounded-full animate-pulse" :class="polling ? 'bg-green-500' : 'bg-gray-400'"></div>
+          <span class="text-sm font-medium text-gray-600" x-text="polling ? 'Live' : 'Paused'"></span>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Refreshes every 10s</p>
+      </div>
+    </div>
+
+    <!-- Active Students Table -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+      <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="font-bold text-gray-800 flex items-center space-x-2">
+          <i data-lucide="users" class="w-5 h-5 text-green-600"></i>
+          <span>Active Students</span>
+        </h2>
+        <span class="text-xs text-gray-400" x-text="'Last updated: ' + lastUpdate"></span>
+      </div>
+
+      <div x-show="loading" class="p-8 text-center text-gray-400">
+        <i data-lucide="loader" class="w-6 h-6 mx-auto mb-2 animate-spin"></i>
+        <p class="text-sm">Loading...</p>
+      </div>
+
+      <div x-show="!loading && sessions.length === 0" class="p-8 text-center text-gray-400">
+        <i data-lucide="user-x" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+        <p>No active students at the moment</p>
+      </div>
+
+      <div x-show="!loading && sessions.length > 0" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="text-left px-4 py-3 font-semibold text-gray-600">Student</th>
+              <th class="text-left px-4 py-3 font-semibold text-gray-600">Reg No</th>
+              <th class="text-left px-4 py-3 font-semibold text-gray-600">Progress</th>
+              <th class="text-left px-4 py-3 font-semibold text-gray-600">Time Left</th>
+              <th class="text-left px-4 py-3 font-semibold text-gray-600">Suspicion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="s in sessions" :key="s.session_id">
+              <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+                <td class="px-4 py-3 font-medium text-gray-800" x-text="s.student_name"></td>
+                <td class="px-4 py-3 font-mono text-gray-600 text-xs" x-text="s.reg_number"></td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-24 bg-gray-200 rounded-full h-2">
+                      <div class="bg-blue-500 h-2 rounded-full transition-all" :style="'width:' + s.progress + '%'"></div>
+                    </div>
+                    <span class="text-xs text-gray-500" x-text="s.answered + '/' + s.total_questions"></span>
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="font-mono text-sm font-bold"
+                    :class="s.time_remaining < 300 ? 'text-red-600' : s.time_remaining < 600 ? 'text-yellow-600' : 'text-green-600'"
+                    x-text="formatTime(s.time_remaining)"></span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                    :class="s.suspicion_count >= 4 ? 'bg-red-100 text-red-700' : s.suspicion_count >= 1 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'"
+                    x-text="s.suspicion_count === 0 ? 'Clean' : s.suspicion_count + ' events'"></span>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function monitorApp() {
+  return {
+    sessions: [],
+    submitted: 0,
+    loading: true,
+    polling: true,
+    lastUpdate: '--:--',
+    interval: null,
+    quizId: {{ quiz.id }},
+
+    init() {
+      this.fetch();
+      this.interval = setInterval(() => this.fetch(), 10000);
+      lucide.createIcons();
+    },
+
+    async fetch() {
+      try {
+        const r = await fetch(`/api/quiz/${this.quizId}/live-sessions/`);
+        const d = await r.json();
+        if (d.status === 'ok') {
+          this.sessions = d.sessions;
+          this.submitted = d.sessions.filter(s => s.is_submitted).length;
+          this.lastUpdate = new Date().toLocaleTimeString();
+          this.polling = true;
+        }
+      } catch(e) {
+        this.polling = false;
+      }
+      this.loading = false;
+      lucide.createIcons();
+    },
+
+    formatTime(s) {
+      const m = Math.floor(s / 60), sec = s % 60;
+      return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+  }
+}
+</script>
+{% endblock %}

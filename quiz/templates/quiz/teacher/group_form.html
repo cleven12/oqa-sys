@@ -1,0 +1,122 @@
+{% extends 'quiz/base.html' %}
+{% block title %}Question Groups - {{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <i data-lucide="layers" class="w-6 h-6 text-blue-600"></i>
+        <div>
+          <h1 class="text-xl font-bold text-gray-800">Question Groups</h1>
+          <p class="text-sm text-gray-500">{{ quiz.title }} · <span class="font-mono">{{ quiz.quiz_code }}</span></p>
+        </div>
+      </div>
+      <a href="{% url 'quiz:teacher_dashboard' %}" class="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i><span>Dashboard</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-green-50 text-green-800 border border-green-200{% endif %}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Add Group Form -->
+      <div class="bg-white rounded-2xl shadow-lg p-6" data-aos="fade-up">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600"></i><span>Add Group</span>
+        </h2>
+        <form method="POST" x-data="{loading:false}">
+          {% csrf_token %}
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Group Name *</label>
+              <input type="text" name="name" required placeholder="e.g. Easy, Section A, Hard"
+                class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Marks/Question *</label>
+                <input type="number" name="marks_per_question" min="1" value="1" required
+                  class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Pick Count *</label>
+                <input type="number" name="pick_count" min="1" value="5" required
+                  class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+                <p class="text-xs text-gray-400 mt-1">Questions to pick per student</p>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Order</label>
+              <input type="number" name="order" min="0" value="{{ groups.count }}"
+                class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+            </div>
+          </div>
+          <button type="submit" @click="loading=true" :disabled="loading"
+            class="w-full mt-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-xl transition flex items-center justify-center space-x-2">
+            <i data-lucide="plus" class="w-4 h-4" x-show="!loading"></i>
+            <span x-text="loading ? 'Adding...' : 'Add Group'"></span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Existing Groups -->
+      <div data-aos="fade-up" data-aos-delay="100">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
+          <i data-lucide="list" class="w-5 h-5 text-blue-600"></i><span>Existing Groups</span>
+        </h2>
+        {% if groups %}
+          <div class="space-y-3">
+            {% for group in groups %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-semibold text-gray-800">{{ group.name }}</p>
+                  <div class="flex space-x-3 mt-1 text-sm text-gray-500">
+                    <span>{{ group.marks_per_question }} mark{% if group.marks_per_question > 1 %}s{% endif %}/question</span>
+                    <span>·</span>
+                    <span>Pick {{ group.pick_count }} of {{ group.questions.count }} questions</span>
+                  </div>
+                  {% if group.questions.count < group.pick_count %}
+                  <p class="text-xs text-red-600 mt-1 flex items-center space-x-1">
+                    <i data-lucide="alert-triangle" class="w-3 h-3"></i>
+                    <span>Not enough questions! Add at least {{ group.pick_count }} questions.</span>
+                  </p>
+                  {% endif %}
+                </div>
+                <form method="POST" action="{% url 'quiz:group_delete' group.id %}" onsubmit="return confirm('Delete group {{ group.name }}?')">
+                  {% csrf_token %}
+                  <button type="submit" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="bg-white rounded-xl border-2 border-dashed border-gray-200 p-8 text-center text-gray-400">
+            <i data-lucide="layers" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+            <p class="text-sm">No groups yet. Add one to enable stratified randomization.</p>
+          </div>
+        {% endif %}
+
+        <div class="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-700">
+          <strong>Tip:</strong> Groups allow each student to get different questions with the same difficulty balance. Without groups, all questions are used.
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex space-x-3">
+      <a href="{% url 'quiz:manage_questions' quiz.id %}" class="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition">
+        <i data-lucide="arrow-right" class="w-4 h-4"></i><span>Manage Questions</span>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
