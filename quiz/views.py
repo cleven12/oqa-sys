@@ -138,6 +138,9 @@ def quiz_create(request):
         if form.is_valid():
             quiz = form.save(commit=False)
             quiz.created_by = request.user
+            # Convert minutes to seconds if needed
+            if quiz.quiz_duration < 300:  # If less than 300, assume minutes
+                quiz.quiz_duration = quiz.quiz_duration * 60
             quiz.save()
             messages.success(request, f'Quiz "{quiz.title}" created successfully! Code: {quiz.quiz_code}')
             return redirect('quiz:manage_groups', quiz_id=quiz.id)
@@ -157,7 +160,11 @@ def quiz_edit(request, quiz_id):
     if request.method == 'POST':
         form = QuizForm(request.POST, instance=quiz)
         if form.is_valid():
-            form.save()
+            quiz = form.save(commit=False)
+            # Convert minutes to seconds if needed
+            if quiz.quiz_duration < 300:  # If less than 300, assume minutes
+                quiz.quiz_duration = quiz.quiz_duration * 60
+            quiz.save()
             messages.success(request, f'Quiz "{quiz.title}" updated successfully!')
             return redirect('quiz:teacher_dashboard')
         else:

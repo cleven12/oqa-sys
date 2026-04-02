@@ -59,6 +59,11 @@ class Quiz(models.Model):
     def passing_percentage(self):
         """Alias for pass_mark to match template usage"""
         return self.pass_mark
+    
+    @property
+    def quiz_duration_minutes(self):
+        """Get quiz duration in minutes for display"""
+        return self.quiz_duration // 60
 
     def __str__(self):
         return f"{self.quiz_code} - {self.title}"

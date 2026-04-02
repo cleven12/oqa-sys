@@ -20,6 +20,17 @@
     
     <style>
         [x-cloak] { display: none !important; }
+        
+        /* Loading fallback - show content even if Alpine doesn't load */
+        [x-show] {
+            display: block !important;
+        }
+        
+        /* Ensure page is visible even if JS fails */
+        body {
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -28,15 +39,38 @@
     {% block content %}{% endblock %}
     
     <script>
-        // Initialize AOS animations
-        AOS.init({
-            duration: 800,
-            once: true,
-            offset: 100
+        // Initialize with error handling
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Initialize AOS animations
+                if (typeof AOS !== 'undefined') {
+                    AOS.init({
+                        duration: 800,
+                        once: true,
+                        offset: 100
+                    });
+                }
+                
+                // Initialize Lucide icons
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                console.warn('Animation libraries failed to load:', error);
+            }
         });
         
-        // Initialize Lucide icons
-        lucide.createIcons();
+        // Check if Alpine loaded after 2 seconds
+        setTimeout(function() {
+            if (typeof Alpine === 'undefined') {
+                console.warn('Alpine.js failed to load from CDN');
+                // Remove x-cloak to show content anyway
+                document.querySelectorAll('[x-cloak]').forEach(function(el) {
+                    el.removeAttribute('x-cloak');
+                    el.style.display = 'block';
+                });
+            }
+        }, 2000);
     </script>
     
     {% block extra_js %}{% endblock %}

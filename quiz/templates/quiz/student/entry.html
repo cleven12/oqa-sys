@@ -76,7 +76,7 @@
                     Enter Your Details
                 </h3>
 
-                <form method="POST" action="{% url 'quiz:start_quiz' quiz.quiz_code %}" x-data="{ loading: false }">
+                <form method="POST" action="{% url 'quiz:start_quiz' quiz.quiz_code %}">
                     {% csrf_token %}
                     
                     {% if messages %}
@@ -178,13 +178,11 @@
                     <!-- Submit Button -->
                     <button 
                         type="submit"
-                        @click="loading = true"
-                        :disabled="loading"
+                        onclick="this.disabled=true; this.innerHTML='<span>Starting Quiz...</span>'; this.form.submit();"
                         class="w-full mt-8 py-4 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-lg transition transform hover:scale-105 flex items-center justify-center space-x-2"
                     >
-                        <span x-show="!loading">Start Quiz</span>
-                        <span x-show="loading" x-cloak>Starting...</span>
-                        <i data-lucide="play-circle" class="w-5 h-5" x-show="!loading"></i>
+                        <span>Start Quiz</span>
+                        <i data-lucide="play-circle" class="w-5 h-5"></i>
                     </button>
                 </form>
             </div>

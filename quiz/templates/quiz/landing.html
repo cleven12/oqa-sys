@@ -12,7 +12,7 @@
                     <i data-lucide="graduation-cap" class="w-8 h-8 text-blue-600"></i>
                     <h1 class="text-2xl font-bold text-gray-800">OQA System</h1>
                 </div>
-                <a href="/admin/" class="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
+                <a href="{% url 'accounts:login' %}" class="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
                     <i data-lucide="shield-check" class="w-5 h-5"></i>
                     <span>Teacher Login</span>
                 </a>
@@ -40,7 +40,7 @@
 
             <!-- Quiz Code Entry Form -->
             <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12" data-aos="fade-up" data-aos-delay="200">
-                <form method="get" id="quizCodeForm" x-data="{ code: '', loading: false }">
+                <form id="quizCodeForm" onsubmit="return handleQuizCodeSubmit(event);">
                     <div class="mb-6">
                         <label for="quiz_code" class="block text-left text-sm font-semibold text-gray-700 mb-2">
                             <i data-lucide="key" class="w-4 h-4 inline mr-1"></i>
@@ -50,12 +50,11 @@
                             type="text" 
                             id="quiz_code" 
                             name="quiz_code"
-                            x-model="code"
                             placeholder="e.g., QZ-ABC123"
                             maxlength="10"
                             required
+                            oninput="this.value = this.value.toUpperCase()"
                             class="w-full px-6 py-4 text-center text-2xl font-mono uppercase tracking-wider border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
-                            @input="code = code.toUpperCase()"
                         >
                         <p class="text-sm text-gray-500 mt-2 text-left">
                             Format: QZ-XXXXXX (e.g., QZ-ABC123)
@@ -64,20 +63,37 @@
 
                     <button 
                         type="submit"
-                        @click="loading = true"
-                        :disabled="loading || code.length < 6"
-                        :class="loading || code.length < 6 ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
-                        class="w-full py-4 px-6 text-white font-semibold rounded-xl shadow-lg transition transform hover:scale-105 flex items-center justify-center space-x-2"
+                        id="submitBtn"
+                        class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg transition transform hover:scale-105 flex items-center justify-center space-x-2"
                     >
-                        <span x-show="!loading">Continue to Quiz</span>
-                        <span x-show="loading" x-cloak>
-                            <i data-lucide="loader" class="w-5 h-5 animate-spin"></i>
-                            <span class="ml-2">Loading...</span>
-                        </span>
-                        <i data-lucide="arrow-right" class="w-5 h-5" x-show="!loading"></i>
+                        <span id="btnText">Continue to Quiz</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5" id="btnIcon"></i>
                     </button>
                 </form>
             </div>
+            
+            <script>
+                function handleQuizCodeSubmit(event) {
+                    event.preventDefault();
+                    const code = document.getElementById('quiz_code').value.trim().toUpperCase();
+                    const btn = document.getElementById('submitBtn');
+                    const btnText = document.getElementById('btnText');
+                    const btnIcon = document.getElementById('btnIcon');
+                    
+                    if (code && code.length >= 6) {
+                        // Update button to loading state
+                        btn.disabled = true;
+                        btn.classList.remove('hover:bg-blue-700', 'hover:scale-105');
+                        btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                        btnText.textContent = 'Loading...';
+                        btnIcon.style.display = 'none';
+                        
+                        // Redirect to the quiz entry page
+                        window.location.href = '/' + code + '/';
+                    }
+                    return false;
+                }
+            </script>
 
             <!-- Help Text -->
             <div class="mt-8 text-sm text-gray-500" data-aos="fade-up" data-aos-delay="400">
