@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils import timezone
 from .forms import TeacherRegistrationForm, LoginForm
 
 
@@ -10,8 +11,21 @@ def register(request):
         form = TeacherRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, 'Registration successful! Please check your email to verify your account.')
-            return redirect('accounts:verify_otp')
+            # Auto-activate the user (skip OTP for now)
+            user.is_active = True
+            user.save()
+            
+            # Update teacher profile
+            try:
+                profile = user.teacher_profile
+                profile.is_verified = True
+                profile.verified_at = timezone.now()
+                profile.save()
+            except:
+                pass
+            
+            messages.success(request, 'Registration successful! You can now login.')
+            return redirect('accounts:login')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
