@@ -17,7 +17,7 @@
 
 🚀 HOW TO IMPORT:
 
-STEP 1: CREATE QUIZ
+OPTION 1: QUICK IMPORT (Without Groups)
    1. Login as teacher
    2. Click "New Quiz" button
    3. Fill in quiz details:
@@ -26,28 +26,23 @@ STEP 1: CREATE QUIZ
       - Duration: 5 minutes
       - Pass Mark: 60%
    4. Click "Create Quiz"
+   5. Click "Import Questions" button
+   6. Choose file: sample_5min_quiz_questions.xlsx
+   7. Click "Upload"
+   8. ✓ All 10 questions imported (without groups)
 
-STEP 2: CREATE GROUPS (Important!)
-   1. In the quiz page, click "Manage Groups"
-   2. Create these 4 groups (one by one):
+OPTION 2: IMPORT WITH GROUPS (Recommended)
+   1. Follow steps 1-4 from Option 1
+   2. Click "Manage Groups"
+   3. Create these 4 groups (one by one):
       • Geography
       • Programming
       • Science
       • Technology
-   3. Save each group
-
-STEP 3: IMPORT QUESTIONS
-   1. Click "Import Questions" button
-   2. Choose file: sample_5min_quiz_questions.xlsx
-   3. Click "Upload"
-   4. Wait for success message
-   5. Verify: Should show "10 questions imported"
-
-STEP 4: VERIFY
-   1. Go to "Manage Questions"
-   2. Check all 10 questions are listed
-   3. Verify groups are assigned correctly
-   4. Check question types and answers
+   4. Click "Import Questions" button
+   5. Choose file: sample_5min_quiz_questions.xlsx
+   6. Click "Upload"
+   7. ✓ All 10 questions imported with groups assigned
 
 ═══════════════════════════════════════════════════════════════════
 
@@ -75,8 +70,9 @@ TECHNOLOGY (2 questions):
 
 ⚠️  IMPORTANT NOTES:
 
-• Groups MUST be created BEFORE importing
-  (Otherwise, group assignment will be skipped)
+• Groups are OPTIONAL during import
+  - If groups don't exist, questions are imported WITHOUT groups
+  - You can add groups later and manually assign questions
 
 • File has 2 sheets:
   - "Instructions" (read first!)
@@ -122,17 +118,16 @@ STEP 3: VERIFY FEATURES
 
 📞 TROUBLESHOOTING:
 
-❌ "Group not found" error
-   → Create all 4 groups before importing
+❌ "Group not found" warning
+   → Questions imported successfully WITHOUT groups
+   → This is normal if you didn't create groups first
+   → You can create groups later and assign questions manually
 
 ❌ "Invalid type" error
    → Check question types are "mcq" or "true_false"
 
 ❌ "Missing column" error
    → Don't modify the Excel headers
-
-❌ Questions imported but no groups
-   → Groups weren't created first (normal, just no grouping)
 
 ❌ Can't find import button
    → Go to quiz page → click "Import Questions" in toolbar

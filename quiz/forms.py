@@ -3,14 +3,27 @@ from .models import Quiz, Question, QuestionGroup, StudentSession
 
 
 class QuizForm(forms.ModelForm):
+    quiz_duration = forms.IntegerField(
+        min_value=1,
+        max_value=300,
+        label="Duration (minutes)",
+        help_text="Quiz duration in minutes"
+    )
+    
     class Meta:
         model = Quiz
         fields = ['title', 'description', 'timer_mode', 'quiz_duration', 'pass_mark', 
                   'randomize_questions', 'randomize_choices']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
-            'quiz_duration': forms.NumberInput(attrs={'help_text': 'Duration in seconds'}),
         }
+    
+    def clean_quiz_duration(self):
+        """Convert minutes to seconds for storage"""
+        minutes = self.cleaned_data.get('quiz_duration')
+        if minutes:
+            return minutes * 60  # Convert to seconds
+        return minutes
 
 
 class QuestionGroupForm(forms.ModelForm):

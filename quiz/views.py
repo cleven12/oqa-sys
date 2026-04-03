@@ -138,9 +138,7 @@ def quiz_create(request):
         if form.is_valid():
             quiz = form.save(commit=False)
             quiz.created_by = request.user
-            # Convert minutes to seconds if needed
-            if quiz.quiz_duration < 300:  # If less than 300, assume minutes
-                quiz.quiz_duration = quiz.quiz_duration * 60
+            # quiz_duration is already in seconds (converted by form)
             quiz.save()
             messages.success(request, f'Quiz "{quiz.title}" created successfully! Code: {quiz.quiz_code}')
             return redirect('quiz:manage_groups', quiz_id=quiz.id)
@@ -161,9 +159,7 @@ def quiz_edit(request, quiz_id):
         form = QuizForm(request.POST, instance=quiz)
         if form.is_valid():
             quiz = form.save(commit=False)
-            # Convert minutes to seconds if needed
-            if quiz.quiz_duration < 300:  # If less than 300, assume minutes
-                quiz.quiz_duration = quiz.quiz_duration * 60
+            # quiz_duration is already in seconds (converted by form)
             quiz.save()
             messages.success(request, f'Quiz "{quiz.title}" updated successfully!')
             return redirect('quiz:teacher_dashboard')
@@ -171,7 +167,17 @@ def quiz_edit(request, quiz_id):
             for error in form.errors.values():
                 messages.error(request, error)
     else:
-        form = QuizForm(instance=quiz)
+        # Need to initialize form with minutes for display
+        initial_data = {
+            'title': quiz.title,
+            'description': quiz.description,
+            'timer_mode': quiz.timer_mode,
+            'quiz_duration': quiz.quiz_duration // 60,  # Convert seconds to minutes
+            'pass_mark': quiz.pass_mark,
+            'randomize_questions': quiz.randomize_questions,
+            'randomize_choices': quiz.randomize_choices,
+        }
+        form = QuizForm(initial=initial_data, instance=quiz)
     
     return render(request, 'quiz/teacher/quiz_form.html', {'form': form, 'quiz': quiz})
 
@@ -330,6 +336,11 @@ def import_questions(request, quiz_id):
             
             if result['status'] == 'success':
                 messages.success(request, f"Successfully imported {result['imported']} questions!")
+                # Show warnings if any
+                if result.get('errors'):
+                    warnings = [e for e in result['errors'] if 'not found - question imported without group' in e]
+                    if warnings:
+                        messages.warning(request, f"{len(warnings)} questions imported without groups (groups don't exist)")
                 return redirect('quiz:manage_questions', quiz_id=quiz.id)
             else:
                 messages.error(request, f"Import failed: {result.get('message', 'Unknown error')}")

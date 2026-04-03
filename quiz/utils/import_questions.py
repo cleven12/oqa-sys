@@ -77,7 +77,8 @@ def import_from_excel(file, quiz):
             try:
                 group = QuestionGroup.objects.get(quiz=quiz, name__iexact=group_name)
             except QuestionGroup.DoesNotExist:
-                errors.append(f'Row {i}: group "{group_name}" not found'); continue
+                # Don't fail - just import without group
+                errors.append(f'Row {i}: group "{group_name}" not found - question imported without group')
 
         Question.objects.create(
             quiz=quiz, group=group, question_text=text,
