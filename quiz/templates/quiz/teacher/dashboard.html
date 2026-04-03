@@ -16,6 +16,10 @@
           class="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition">
           <i data-lucide="plus" class="w-4 h-4"></i><span>New Quiz</span>
         </a>
+        <a href="{% url 'accounts:profile' %}"
+          class="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition">
+          <i data-lucide="user" class="w-4 h-4"></i><span class="hidden md:inline">Profile</span>
+        </a>
         <a href="{% url 'accounts:logout' %}"
           class="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition">
           <i data-lucide="log-out" class="w-4 h-4"></i><span class="hidden md:inline">Logout</span>

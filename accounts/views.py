@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from .forms import TeacherRegistrationForm, LoginForm
+from .models import TeacherProfile
 
 
 def register(request):
@@ -61,6 +62,44 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('quiz:landing')
+
+
+@login_required
+def profile(request):
+    """View and edit teacher profile"""
+    try:
+        teacher_profile = request.user.teacher_profile
+    except TeacherProfile.DoesNotExist:
+        # Create profile if it doesn't exist
+        teacher_profile = TeacherProfile.objects.create(user=request.user)
+    
+    if request.method == 'POST':
+        # Update user info
+        request.user.first_name = request.POST.get('first_name', '')
+        request.user.last_name = request.POST.get('last_name', '')
+        request.user.email = request.POST.get('email', '')
+        request.user.save()
+        
+        # Update profile info
+        teacher_profile.phone_number = request.POST.get('phone_number', '')
+        teacher_profile.institution = request.POST.get('institution', '')
+        teacher_profile.save()
+        
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('accounts:profile')
+    
+    # Calculate statistics
+    from quiz.models import Quiz, StudentSession
+    total_quizzes = Quiz.objects.filter(created_by=request.user).count()
+    active_quizzes = Quiz.objects.filter(created_by=request.user, is_active=True).count()
+    total_students = StudentSession.objects.filter(quiz__created_by=request.user).values('reg_number').distinct().count()
+    
+    return render(request, 'accounts/profile.html', {
+        'teacher_profile': teacher_profile,
+        'total_quizzes': total_quizzes,
+        'active_quizzes': active_quizzes,
+        'total_students': total_students,
+    })
 
 
 def verify_otp(request):

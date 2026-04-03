@@ -22,7 +22,7 @@
     {% endif %}
 
     <div class="bg-white rounded-2xl shadow-lg p-8" data-aos="fade-up">
-      <form method="POST" x-data="{loading:false}">
+      <form method="POST" id="quizForm" onsubmit="handleQuizSubmit(event)">
         {% csrf_token %}
         <div class="space-y-6">
 
@@ -79,13 +79,29 @@
 
         </div>
 
-        <button type="submit" @click="loading=true" :disabled="loading"
+        <button type="submit" id="submitBtn"
           class="w-full mt-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-xl transition flex items-center justify-center space-x-2">
-          <i data-lucide="save" class="w-5 h-5" x-show="!loading"></i>
-          <span x-text="loading ? 'Saving...' : '{% if quiz %}Update Quiz{% else %}Create Quiz{% endif %}'"></span>
+          <i data-lucide="save" class="w-5 h-5" id="saveIcon"></i>
+          <span id="btnText">{% if quiz %}Update Quiz{% else %}Create Quiz{% endif %}</span>
         </button>
       </form>
     </div>
+
+    <script>
+      function handleQuizSubmit(event) {
+        const btn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const saveIcon = document.getElementById('saveIcon');
+        
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btnText.textContent = 'Saving...';
+        if (saveIcon) saveIcon.style.display = 'none';
+        
+        // Form will submit normally
+        return true;
+      }
+    </script>
   </div>
 </div>
 {% endblock %}
