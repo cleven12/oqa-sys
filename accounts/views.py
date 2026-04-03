@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from .forms import TeacherRegistrationForm, LoginForm
+from .models import TeacherProfile
 
 
 def register(request):
@@ -61,6 +62,35 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('quiz:landing')
+
+
+@login_required
+def profile(request):
+    """View and edit teacher profile"""
+    try:
+        teacher_profile = request.user.teacher_profile
+    except TeacherProfile.DoesNotExist:
+        # Create profile if it doesn't exist
+        teacher_profile = TeacherProfile.objects.create(user=request.user)
+    
+    if request.method == 'POST':
+        # Update user info
+        request.user.first_name = request.POST.get('first_name', '')
+        request.user.last_name = request.POST.get('last_name', '')
+        request.user.email = request.POST.get('email', '')
+        request.user.save()
+        
+        # Update profile info
+        teacher_profile.phone_number = request.POST.get('phone_number', '')
+        teacher_profile.institution = request.POST.get('institution', '')
+        teacher_profile.save()
+        
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('accounts:profile')
+    
+    return render(request, 'accounts/profile.html', {
+        'teacher_profile': teacher_profile
+    })
 
 
 def verify_otp(request):
