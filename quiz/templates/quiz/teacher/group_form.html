@@ -30,7 +30,7 @@
         <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center space-x-2">
           <i data-lucide="plus-circle" class="w-5 h-5 text-blue-600"></i><span>Add Group</span>
         </h2>
-        <form method="POST" x-data="{loading:false}">
+        <form method="POST" id="groupForm" onsubmit="handleFormSubmit(event, this)">
           {% csrf_token %}
           <div class="space-y-4">
             <div>
@@ -57,12 +57,26 @@
                 class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
             </div>
           </div>
-          <button type="submit" @click="loading=true" :disabled="loading"
+          <button type="submit"
             class="w-full mt-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-xl transition flex items-center justify-center space-x-2">
-            <i data-lucide="plus" class="w-4 h-4" x-show="!loading"></i>
-            <span x-text="loading ? 'Adding...' : 'Add Group'"></span>
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Add Group</span>
           </button>
         </form>
+
+        <script>
+          function handleFormSubmit(event, form) {
+            const btn = form.querySelector('button[type="submit"]');
+            const btnText = btn.querySelector('span');
+            const originalText = btnText.textContent;
+            
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btnText.textContent = 'Adding...';
+            
+            return true;
+          }
+        </script>
       </div>
 
       <!-- Existing Groups -->
