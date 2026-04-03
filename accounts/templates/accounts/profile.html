@@ -45,22 +45,15 @@
       <!-- Stats -->
       <div class="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
         <div class="text-center">
-          <p class="text-2xl font-bold text-gray-800">{{ user.quizzes.count }}</p>
+          <p class="text-2xl font-bold text-gray-800">{{ total_quizzes }}</p>
           <p class="text-sm text-gray-500">Quizzes</p>
         </div>
         <div class="text-center">
-          <p class="text-2xl font-bold text-gray-800">{{ user.quizzes.filter.is_active=True.count }}</p>
+          <p class="text-2xl font-bold text-gray-800">{{ active_quizzes }}</p>
           <p class="text-sm text-gray-500">Active</p>
         </div>
         <div class="text-center">
-          <p class="text-2xl font-bold text-gray-800">
-            {% with total_sessions=0 %}
-              {% for quiz in user.quizzes.all %}
-                {% with total_sessions=total_sessions|add:quiz.sessions.count %}{% endwith %}
-              {% endfor %}
-              {{ total_sessions }}
-            {% endwith %}
-          </p>
+          <p class="text-2xl font-bold text-gray-800">{{ total_students }}</p>
           <p class="text-sm text-gray-500">Students</p>
         </div>
       </div>

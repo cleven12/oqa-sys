@@ -88,8 +88,17 @@ def profile(request):
         messages.success(request, 'Profile updated successfully!')
         return redirect('accounts:profile')
     
+    # Calculate statistics
+    from quiz.models import Quiz, StudentSession
+    total_quizzes = Quiz.objects.filter(created_by=request.user).count()
+    active_quizzes = Quiz.objects.filter(created_by=request.user, is_active=True).count()
+    total_students = StudentSession.objects.filter(quiz__created_by=request.user).values('reg_number').distinct().count()
+    
     return render(request, 'accounts/profile.html', {
-        'teacher_profile': teacher_profile
+        'teacher_profile': teacher_profile,
+        'total_quizzes': total_quizzes,
+        'active_quizzes': active_quizzes,
+        'total_students': total_students,
     })
 
 
