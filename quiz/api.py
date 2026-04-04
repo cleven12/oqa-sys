@@ -93,8 +93,23 @@ def save_answer(request, session_id):
         
         question = get_object_or_404(Question, id=question_id, quiz=session.quiz)
         
+        # normalize correct answer format
+        # Database might have "A", "B", "C", "D" or "option_a", "option_b", etc
+        correct_answer_normalized = question.correct_answer.lower().strip()
+        
+        # convert single letter to option_x format
+        letter_to_option = {
+            'a': 'option_a',
+            'b': 'option_b', 
+            'c': 'option_c',
+            'd': 'option_d'
+        }
+        
+        if correct_answer_normalized in letter_to_option:
+            correct_answer_normalized = letter_to_option[correct_answer_normalized]
+        
         # check if answer correct
-        is_correct = (chosen_answer == question.correct_answer)
+        is_correct = (chosen_answer.lower().strip() == correct_answer_normalized)
         marks_awarded = question.marks if is_correct else 0
         
         # create or update answer
@@ -235,45 +250,50 @@ def get_questions(request, session_id):
         if session.is_submitted:
             return JsonResponse({'error': 'Quiz already submitted'}, status=400)
         
-        import random as _random
-
-        # use randomized order stored at quiz start
-        order_key = f'q_order_{session.id}'
-        question_ids = request.session.get(order_key)
-
-        if question_ids:
-            questions_map = {q.id: q for q in session.quiz.questions.filter(id__in=question_ids)}
-            questions = [questions_map[qid] for qid in question_ids if qid in questions_map]
-        else:
-            questions = list(session.quiz.questions.order_by('order'))
-
-        def get_options(question):
+        import random
+        
+        # get all questions
+        questions = list(session.quiz.questions.all().order_by('order'))
+        
+        # randomize questions if enabled (use session ID as seed for consistency)
+        if session.quiz.randomize_questions:
+            random.seed(session.id)
+            random.shuffle(questions)
+            random.seed()  # reset seed
+        
+        # prefetch existing answers
+        existing_answers = {a.question_id: a.chosen_answer for a in session.answers.all()}
+        
+        questions_data = []
+        for idx, question in enumerate(questions):
+            # build options
             if question.question_type == 'true_false':
-                return [
+                options = [
                     {'key': 'option_a', 'label': 'A)', 'text': question.option_a or 'True'},
                     {'key': 'option_b', 'label': 'B)', 'text': question.option_b or 'False'},
                 ]
-            choices = [(k, getattr(question, k)) for k in ['option_a','option_b','option_c','option_d']
-                       if getattr(question, k)]
-            if question.quiz.randomize_choices:
-                _random.seed(f"{session.id}{question.id}")
-                _random.shuffle(choices)
-                _random.seed()
-            return [{'key': k, 'label': chr(65+i)+')', 'text': v} for i,(k,v) in enumerate(choices)]
-
-        # prefetch existing answers
-        existing = {a.question_id: a.chosen_answer for a in session.answers.all()}
-
-        questions_data = []
-        for idx, question in enumerate(questions):
+            else:  # mcq
+                options = []
+                for opt_key in ['option_a', 'option_b', 'option_c', 'option_d']:
+                    opt_value = getattr(question, opt_key, None)
+                    if opt_value:
+                        label = opt_key[-1].upper()  # Get A, B, C, or D
+                        options.append({'key': opt_key, 'label': f'{label})', 'text': opt_value})
+                
+                # randomize choices if enabled (use session+question ID as seed)
+                if session.quiz.randomize_choices:
+                    random.seed(f"{session.id}{question.id}")
+                    random.shuffle(options)
+                    random.seed()
+            
             questions_data.append({
                 'id': question.id,
                 'index': idx,
                 'text': question.question_text,
                 'type': question.question_type,
                 'marks': question.marks,
-                'options': get_options(question),
-                'chosen_answer': existing.get(question.id)
+                'options': options,
+                'chosen_answer': existing_answers.get(question.id)
             })
         
         return JsonResponse({
