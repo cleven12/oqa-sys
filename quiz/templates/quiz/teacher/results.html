@@ -74,7 +74,8 @@
             </thead>
             <tbody>
               {% for s in sessions %}
-              <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+              <tr class="border-b border-gray-50 hover:bg-blue-50 transition cursor-pointer"
+                  onclick="window.location.href='{% url 'quiz:student_detail' s.id %}'">
                 <td class="px-4 py-3 text-gray-400">{{ forloop.counter }}</td>
                 <td class="px-4 py-3 font-medium text-gray-800">{{ s.full_name }}</td>
                 <td class="px-4 py-3 font-mono text-xs text-gray-600">{{ s.reg_number }}</td>

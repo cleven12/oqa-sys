@@ -73,7 +73,8 @@
           </thead>
           <tbody>
             <template x-for="s in sessions" :key="s.session_id">
-              <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+              <tr class="border-b border-gray-50 hover:bg-blue-50 transition cursor-pointer" 
+                  @click="window.location.href='/teacher/session/' + s.session_id + '/detail/'">
                 <td class="px-4 py-3 font-medium text-gray-800" x-text="s.student_name"></td>
                 <td class="px-4 py-3 font-mono text-gray-600 text-xs" x-text="s.reg_number"></td>
                 <td class="px-4 py-3">

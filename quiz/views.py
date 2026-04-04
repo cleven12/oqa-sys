@@ -388,3 +388,44 @@ def quiz_results(request, quiz_id):
     sessions = quiz.sessions.filter(is_submitted=True)
     return render(request, 'quiz/teacher/results.html', {'quiz': quiz, 'sessions': sessions})
 
+
+@login_required
+def student_detail(request, session_id):
+    """View individual student's quiz attempt with suspicious events"""
+    session = get_object_or_404(StudentSession, id=session_id)
+    
+    # Security check - ensure teacher owns this quiz
+    if session.quiz.created_by != request.user:
+        messages.error(request, 'Access denied')
+        return redirect('quiz:teacher_dashboard')
+    
+    # Get all answers for this session
+    answers = Answer.objects.filter(session=session).select_related('question').order_by('question__order')
+    
+    # Get suspicious events
+    suspicious_events = SuspiciousEvent.objects.filter(session=session).order_by('timestamp')
+    
+    # Calculate statistics
+    total_questions = session.quiz.total_questions
+    answered_count = answers.count()
+    correct_count = sum(1 for ans in answers if ans.is_correct)
+    
+    # Get time spent
+    time_spent = None
+    if session.submitted_at and session.start_time:
+        time_diff = session.submitted_at - session.start_time
+        time_spent = int(time_diff.total_seconds())
+    
+    context = {
+        'session': session,
+        'answers': answers,
+        'suspicious_events': suspicious_events,
+        'total_questions': total_questions,
+        'answered_count': answered_count,
+        'correct_count': correct_count,
+        'time_spent': time_spent,
+        'suspicion_count': suspicious_events.count(),
+    }
+    
+    return render(request, 'quiz/teacher/student_detail.html', context)
+

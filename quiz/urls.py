@@ -39,6 +39,7 @@ urlpatterns = [
     # Live monitoring
     path('teacher/quiz/<int:quiz_id>/monitor/', views.live_monitor, name='live_monitor'),
     path('teacher/quiz/<int:quiz_id>/results/', views.quiz_results, name='quiz_results'),
+    path('teacher/session/<int:session_id>/detail/', views.student_detail, name='student_detail'),
     
     # AJAX API endpoints
     path('api/heartbeat/', api.heartbeat, name='api_heartbeat'),
