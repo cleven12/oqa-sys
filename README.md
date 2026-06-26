@@ -172,7 +172,6 @@ See the dedicated [Anti-Cheat Algorithm + Diagrams](docs/ANTI_CHEAT_ALGORITHM.md
 This system raises the cost of casual cheating. Determined remote cheating (phones etc.) still requires human invigilation.
 
 **Pro version** adds deeper analytics and optional webcam/proctoring hooks.
-```
 
 I should insert this in a good place, perhaps after features.
 
