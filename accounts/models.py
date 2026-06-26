@@ -4,6 +4,7 @@ from django.utils import timezone
 
 
 class TeacherProfile(models.Model):
+    """Simple profile for OSS. Pro version has subscription status etc."""
     """
     Extends Django User model for teacher-specific data.
     Linked to django-allauth for OTP and email verification.
