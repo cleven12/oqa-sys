@@ -1,8 +1,9 @@
+# Note: For high-traffic Pro deployments, add django-ratelimit or nginx rate limiting here.
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_http_methods
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_protect
 from django.db import models
 import json
 from .models import StudentSession, Answer, Question, SuspiciousEvent, Quiz
@@ -10,7 +11,7 @@ from .utils.timer import calculate_time_remaining, is_time_expired
 
 
 @require_POST
-@csrf_exempt
+@csrf_protect
 def heartbeat(request):
     """
     Heartbeat endpoint - called every 10 seconds from client
@@ -66,7 +67,7 @@ def heartbeat(request):
 
 
 @require_POST
-@csrf_exempt
+@csrf_protect
 def save_answer(request, session_id):
     """
     Save or update student answer
@@ -145,7 +146,7 @@ def save_answer(request, session_id):
 
 
 @require_POST
-@csrf_exempt
+@csrf_protect
 def log_suspicion(request, session_id):
     """
     Log suspicious activity (anti-cheat)
@@ -240,7 +241,7 @@ def live_sessions(request, quiz_id):
 @require_http_methods(["GET"])
 def get_questions(request, session_id):
     """
-    Load all questions for a quiz session
+    Load questions for a quiz session (using pre-selected stratified list if groups configured)
     Returns questions WITHOUT correct answers (security)
     """
     try:
@@ -252,14 +253,21 @@ def get_questions(request, session_id):
         
         import random
         
-        # get all questions
-        questions = list(session.quiz.questions.all().order_by('order'))
-        
-        # randomize questions if enabled (use session ID as seed for consistency)
-        if session.quiz.randomize_questions:
-            random.seed(session.id)
-            random.shuffle(questions)
-            random.seed()  # reset seed
+        # Use pre-selected question IDs for this session (supports group pick_count stratification)
+        selected_ids = session.selected_question_ids or []
+        if selected_ids:
+            # Preserve the selected order
+            questions = list(Question.objects.filter(id__in=selected_ids, quiz=session.quiz))
+            # order by the saved selected order
+            id_to_q = {q.id: q for q in questions}
+            questions = [id_to_q[qid] for qid in selected_ids if qid in id_to_q]
+        else:
+            # Fallback for legacy sessions: all questions
+            questions = list(session.quiz.questions.all().order_by('order'))
+            if session.quiz.randomize_questions:
+                random.seed(session.id)
+                random.shuffle(questions)
+                random.seed()
         
         # prefetch existing answers
         existing_answers = {a.question_id: a.chosen_answer for a in session.answers.all()}
