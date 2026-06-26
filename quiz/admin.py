@@ -1,4 +1,5 @@
 from django.contrib import admin
+# Pro: Advanced admin actions and bulk operations are part of paid offering
 from django.db import models
 from django import forms
 from .models import Quiz, QuestionGroup, Question, StudentSession, Answer, SuspiciousEvent
