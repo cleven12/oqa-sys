@@ -1,3 +1,5 @@
+# Copyright (c) OQA Contributors
+# Licensed under the terms in LICENSE
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
@@ -5,7 +7,8 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db import IntegrityError
 from .models import Quiz, Question, QuestionGroup, StudentSession, Answer, SuspiciousEvent
-from .forms import StudentEntryForm, QuizForm, QuestionGroupForm, QuestionForm
+from .forms import QuizForm, QuestionGroupForm, QuestionForm, StudentEntryForm
+from .utils.selection import select_questions_for_session, compute_max_score
 
 
 def landing(request):
@@ -27,30 +30,55 @@ def start_quiz(request, quiz_code):
     
     quiz = get_object_or_404(Quiz, quiz_code=quiz_code.upper(), is_active=True)
     
-    # get form data
-    full_name = request.POST.get('full_name', '').strip()
-    reg_number = request.POST.get('reg_number', '').strip()
-    email = request.POST.get('email', '').strip()
+    # Use form for validation
+    form = StudentEntryForm(request.POST)
     accept_rules = request.POST.get('accept_rules')
     
-    # validate
-    if not all([full_name, reg_number, email, accept_rules]):
-        messages.error(request, 'All fields are required and you must accept the rules')
+    if not form.is_valid() or not accept_rules:
+        for field, errs in form.errors.items():
+            for e in errs:
+                messages.error(request, e)
+        if not accept_rules:
+            messages.error(request, 'You must accept the rules to continue.')
+        return redirect('quiz:quiz_entry', quiz_code=quiz_code)
+    
+    full_name = form.cleaned_data['full_name'].strip()
+    reg_number = form.cleaned_data['reg_number'].strip()
+    email = form.cleaned_data['email'].strip()
+    
+    # Safeguard: ensure quiz has questions
+    total_questions = quiz.questions.count()
+    if total_questions == 0:
+        messages.error(request, 'This quiz has no questions yet. Please contact your teacher.')
         return redirect('quiz:quiz_entry', quiz_code=quiz_code)
     
     try:
-        # calculate max possible score
-        max_score = sum(q.marks for q in quiz.questions.all())
-        
-        # create student session
+        # Create session first so we have stable ID for deterministic selection seed
         session = StudentSession.objects.create(
             quiz=quiz,
             full_name=full_name,
             reg_number=reg_number,
             email=email,
-            max_possible_score=max_score,
-            current_question_index=0
+            max_possible_score=0,  # temp
+            current_question_index=0,
+            selected_question_ids=[]
         )
+        
+        # Select questions using stratified logic (seed based on stable session.id)
+        selected = select_questions_for_session(quiz, session_id_seed=session.id)
+        
+        if not selected:
+            session.delete()
+            messages.error(request, 'No questions available for this quiz.')
+            return redirect('quiz:quiz_entry', quiz_code=quiz_code)
+        
+        max_score = compute_max_score(selected)
+        selected_ids = [q.id for q in selected]
+        
+        # Persist selection + max score
+        session.selected_question_ids = selected_ids
+        session.max_possible_score = max_score
+        session.save()
         
         return redirect('quiz:quiz_attempt', session_id=session.id)
         
@@ -323,44 +351,7 @@ def question_delete(request, question_id):
     return redirect('quiz:manage_questions', quiz_id=quiz_id)
 
 
-@login_required
-def import_questions(request, quiz_id):
-    quiz = get_object_or_404(Quiz, id=quiz_id, created_by=request.user)
-    
-    if request.method == 'POST' and request.FILES.get('excel_file'):
-        try:
-            from .utils.import_questions import import_questions_from_file
-            excel_file = request.FILES['excel_file']
-            
-            result = import_questions_from_file(excel_file, quiz)
-            
-            if result['status'] == 'success':
-                messages.success(request, f"Successfully imported {result['imported']} questions!")
-                # Show warnings if any
-                if result.get('errors'):
-                    warnings = [e for e in result['errors'] if 'not found - question imported without group' in e]
-                    if warnings:
-                        messages.warning(request, f"{len(warnings)} questions imported without groups (groups don't exist)")
-                return redirect('quiz:manage_questions', quiz_id=quiz.id)
-            else:
-                messages.error(request, f"Import failed: {result.get('message', 'Unknown error')}")
-        except Exception as e:
-            messages.error(request, f'Error importing file: {str(e)}')
-    
-    return render(request, 'quiz/teacher/import.html', {'quiz': quiz})
 
-
-@login_required
-def export_template(request, quiz_id):
-    quiz = get_object_or_404(Quiz, id=quiz_id, created_by=request.user)
-    
-    try:
-        from .utils.export import generate_import_template
-        response = generate_import_template()
-        return response
-    except Exception as e:
-        messages.error(request, f'Error generating template: {str(e)}')
-        return redirect('quiz:import_questions', quiz_id=quiz_id)
 
 
 @login_required
@@ -386,7 +377,8 @@ def live_monitor(request, quiz_id):
 def quiz_results(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id, created_by=request.user)
     sessions = quiz.sessions.filter(is_submitted=True)
-    return render(request, 'quiz/teacher/results.html', {'quiz': quiz, 'sessions': sessions})
+    passed_count = sum(1 for s in sessions if s.is_passed)
+    return render(request, 'quiz/teacher/results.html', {'quiz': quiz, 'sessions': sessions, 'passed_count': passed_count})
 
 
 @login_required
