@@ -179,6 +179,7 @@ class StudentSession(models.Model):
     current_question_index = models.IntegerField(default=0)
     # Stores ordered list of selected question IDs for this session (supports stratified group picking)
     selected_question_ids = models.JSONField(default=list, blank=True)
+    teacher_notes = models.TextField(blank=True, help_text="Internal notes visible to teacher only (Pro feature seed)")
 
     def __str__(self):
         return f"{self.reg_number} - {self.full_name} ({self.quiz.quiz_code})"
