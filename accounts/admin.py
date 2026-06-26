@@ -1,4 +1,5 @@
 from django.contrib import admin
+# Teacher profiles visible in admin for OSS. Pro has dashboard for all teachers.
 from .models import TeacherProfile
 
 
