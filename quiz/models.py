@@ -7,6 +7,11 @@ import string
 
 
 class Quiz(models.Model):
+    """
+    Core Quiz model.
+    Supports stratified sampling via QuestionGroups + pick_count.
+    This is part of the open source core. Pro version adds analytics layers.
+    """
     TIMER_MODE_CHOICES = [
         ('quiz', 'Quiz Timer Only'),
         ('question', 'Per-Question Timer Only'),
@@ -172,6 +177,8 @@ class StudentSession(models.Model):
     max_possible_score = models.IntegerField(default=0)
     is_submitted = models.BooleanField(default=False)
     current_question_index = models.IntegerField(default=0)
+    # Stores ordered list of selected question IDs for this session (supports stratified group picking)
+    selected_question_ids = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return f"{self.reg_number} - {self.full_name} ({self.quiz.quiz_code})"
