@@ -146,11 +146,3 @@ sequenceDiagram
 
 For the full Pro version, we offer enhanced detection (keystroke analysis, webcam flags, etc.) — email **clevengodsontech@gmail.com**
 ```
-
-This is simple, uses Mermaid for attractiveness, explains the algorithm clearly.
-
-Now, also integrate some Mermaid into the main README or ARCHITECTURE for "the arch and design itself".
-
-Let's add attractive Mermaid sections to README.md.
-
-First, update README with a quick architecture teaser + anti-cheat link.
