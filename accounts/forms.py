@@ -32,5 +32,9 @@ class TeacherRegistrationForm(UserCreationForm):
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(max_length=150)
+    username = forms.CharField(
+        max_length=150,
+        label="Username or Email",
+        help_text="Enter your username or email address"
+    )
     password = forms.CharField(widget=forms.PasswordInput)
