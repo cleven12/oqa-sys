@@ -417,6 +417,7 @@ def student_detail(request, session_id):
         'correct_count': correct_count,
         'time_spent': time_spent,
         'suspicion_count': suspicious_events.count(),
+        'teacher_notes': session.teacher_notes,  # Pro foundation
     }
     
     return render(request, 'quiz/teacher/student_detail.html', context)
