@@ -11,7 +11,7 @@
 
 ## Pro Version (Paid / Freelance)
 
-Contact `freelance@cleven.dev` for pricing and demos.
+Contact `clevengodsontech@gmail.com` for pricing and demos.
 
 **Additional capabilities typically included:**
 - Hosted SaaS with zero maintenance
