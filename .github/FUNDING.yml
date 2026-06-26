@@ -1,10 +1,11 @@
 # GitHub Sponsors + other funding platforms
-# Update the username and links to your own
+# For commercial/Pro inquiries: clevengodsontech@gmail.com
 
-github: [your-github-username]   # <-- CHANGE to your GitHub username for Sponsors button
-patreon: # Replace with your Patreon username if you have one
-ko_fi: # e.g. cleven
+# Set your GitHub username here (enables the Sponsors button if you have GitHub Sponsors enabled)
+github: [your-github-username]
+
+# Primary support link (shows prominently)
 custom:
-  # Add your own links (PayPal, Ko-fi, BuyMeACoffee, etc.)
-  - https://paypal.me/YOUR_PAYPAL_USERNAME
-  # - https://ko-fi.com/YOUR_USERNAME
+  - https://snippe.me/pay/support-cleven
+
+

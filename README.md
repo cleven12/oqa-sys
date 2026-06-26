@@ -24,6 +24,43 @@ No student accounts required. Students enter via a short code + basic details.
 - **No student login friction** — just name + reg # + email. Duplicate attempt prevention via unique (quiz + reg#).
 - Modern responsive UI powered by Tailwind CDN + Alpine.js + Lucide (no build step).
 
+### Architecture at a Glance
+
+```mermaid
+flowchart TB
+    subgraph Student
+        A[Landing → Enter Code]
+        B[Submit Details]
+        C[Timed Quiz + Anti-Cheat]
+    end
+    subgraph Backend
+        D[Session + Timer Authority]
+        E[Stratified Question Selection]
+        F[Suspicion Logging]
+    end
+    subgraph Teacher
+        G[Create Quiz + Groups]
+        H[Live Monitor]
+        I[Results + Export]
+    end
+
+    A --> B --> C
+    C --> D & E & F
+    G --> H & I
+```
+
+See full anti-cheat algorithm + more diagrams in [docs/ANTI_CHEAT_ALGORITHM.md](docs/ANTI_CHEAT_ALGORITHM.md)
+
+## ❤️ Support the Developer
+
+If OQA System helps you run fair assessments, please consider supporting the creator:
+
+**[👉 Support Cleven](https://snippe.me/pay/support-cleven)**
+
+Your support directly helps maintain the open source core and develop new features (including Pro enhancements).
+
+---
+
 ## Tech Stack
 
 - Django 5.2
@@ -130,9 +167,18 @@ oqa-sys/
 
 ## Security & Fairness
 
-See docs/SYSTEM_DOCUMENTATION.md (sections on cheating mitigations).
+See the dedicated [Anti-Cheat Algorithm + Diagrams](docs/ANTI_CHEAT_ALGORITHM.md) and [Architecture Overview](docs/ARCHITECTURE.md) (includes Mermaid flows).
 
 This system raises the cost of casual cheating. Determined remote cheating (phones etc.) still requires human invigilation.
+
+**Pro version** adds deeper analytics and optional webcam/proctoring hooks.
+```
+
+I should insert this in a good place, perhaps after features.
+
+To make it attractive, place it under a new section.
+
+Since search_replace needs exact match, find a good insertion point.
 
 ## License
 
@@ -146,8 +192,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Pull requests are welcome!
 
 If OQA System saves you time or helps your school, please consider sponsoring the maintainer:
 
-- **GitHub Sponsors**: See the [Sponsors page](https://github.com/sponsors/cleven) (update the username in `.github/FUNDING.yml`)
-- Other options are listed in [.github/FUNDING.yml](.github/FUNDING.yml)
+**[👉 Support Cleven](https://snippe.me/pay/support-cleven)**
+
+- GitHub Sponsors link also available in [.github/FUNDING.yml](.github/FUNDING.yml) (set your username)
 
 Every sponsor helps keep the project maintained and improves the open source core.
 
@@ -171,7 +218,7 @@ I also offer a **Pro version** and professional freelance services:
 
 📧 **Email me directly for Pro licensing, demos, quotes, or custom development work:**
 
-**`freelance@cleven.dev`**  *(replace with your real email before publishing)*
+**`clevengodsontech@gmail.com`**
 
 I reply within 24–48 hours. Please include:
 - Number of expected students / quizzes
@@ -185,7 +232,7 @@ This is how I fund ongoing development of the open source project while offering
 Made with ❤️ to be simple, fair, and professional for real classrooms and educators.
 
 **Before making the repository public:**
-1. Replace `freelance@cleven.dev` with your real email address in README.md and .github/FUNDING.yml
+1. Update `clevengodsontech@gmail.com` if you want to use a different contact email.
 2. Update GitHub username in FUNDING.yml
 3. (Optional) Add real sponsor links
 4. Review docs/ for any outdated deployment notes

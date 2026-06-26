@@ -6,7 +6,7 @@ If you discover a security vulnerability, **please do not open a public issue**.
 
 Instead, email the maintainer directly:
 
-**`freelance@cleven.dev`**
+**`clevengodsontech@gmail.com`**
 
 Please include as much detail as possible (steps to reproduce, affected versions, etc.).
 

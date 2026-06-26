@@ -927,7 +927,7 @@ DB_ENGINE=django.db.backends.sqlite3
 DB_NAME=/home/ubuntu/online-quiz-assessment-system/db.sqlite3
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-EMAIL_HOST_USER=your@gmail.com
+EMAIL_HOST_USER=clevengodsontech@gmail.com
 EMAIL_HOST_PASSWORD=your_app_password
 EMAIL_USE_TLS=True
 ```

@@ -16,7 +16,7 @@ Examples of behavior that contributes to a positive environment:
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the maintainers at freelance@cleven.dev.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the maintainers at clevengodsontech@gmail.com.
 
 ## Scope
 
