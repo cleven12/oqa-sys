@@ -10,10 +10,12 @@ All notable changes to OQA System.
 - Detailed Pro vs OSS documentation
 - CI/CD with GitHub Actions
 - Dependabot
-- Individual file commit history for clean public release
+- Individual file commit history for clean public release (granular commits)
 - Many documentation improvements
 - Subtle Pro mentions in UI
 - Security header notes
+- teacher_notes field as Pro foundation
+- .editorconfig + CODEOWNERS + more OSS files
 
 ## Earlier
 - Core stratified question selection implemented
