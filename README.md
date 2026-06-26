@@ -231,10 +231,4 @@ This is how I fund ongoing development of the open source project while offering
 
 Made with ❤️ to be simple, fair, and professional for real classrooms and educators.
 
-**Before making the repository public:**
-1. Update `clevengodsontech@gmail.com` if you want to use a different contact email.
-2. Update GitHub username in FUNDING.yml
-3. (Optional) Add real sponsor links
-4. Review docs/ for any outdated deployment notes
-
 Happy teaching!
