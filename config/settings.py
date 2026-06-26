@@ -7,7 +7,7 @@ from decouple import config
 SECRET_KEY = config('SECRET_KEY', default='your-secret-key')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS =config('ALLOWED_HOSTS').split(',')
+ALLOWED_HOSTS = [h.strip() for h in config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',') if h.strip()]
 
 
 # Application definition
@@ -110,6 +110,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/quiz/teacher/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Pro deployment note:
+# For production, always set DEBUG=False, use strong SECRET_KEY,
+# and consider adding django-ratelimit + proper email backend.
 
 # Session settings
 SESSION_COOKIE_AGE = 28800
