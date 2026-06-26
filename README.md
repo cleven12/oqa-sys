@@ -1,7 +1,7 @@
 # OQA System — Online Quiz & Assessment
 
-[![CI](https://github.com/YOUR_USERNAME/oqa-sys/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/oqa-sys/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/YOUR_USERNAME/oqa-sys)](LICENSE)
+[![CI](https://github.com/cleven12/oqa-sys/actions/workflows/ci.yml/badge.svg)](https://github.com/cleven12/oqa-sys/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/cleven12/oqa-sys)](LICENSE)
 [![Open Source](https://img.shields.io/badge/Open%20Source-Yes-brightgreen)](README.md)
 
 A professional, secure, open-source web application for running timed online quizzes and assessments. Designed for teachers and schools who want a fair, low-friction testing experience with strong anti-cheat features and stratified question pools.
@@ -76,7 +76,7 @@ Your support directly helps maintain the open source core and develop new featur
 > ```
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/oqa-sys.git
+git clone https://github.com/cleven12/oqa-sys.git
 cd oqa-sys
 
 python -m venv venv
