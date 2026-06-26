@@ -1,3 +1,4 @@
+# Pro freelancer note: This auth is intentionally simple for easy OSS self-hosting.
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -12,7 +13,7 @@ def register(request):
         form = TeacherRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Auto-activate the user (skip OTP for now)
+            # Auto-activate the user (simplified auth for OSS ease of use)
             user.is_active = True
             user.save()
             
@@ -25,8 +26,10 @@ def register(request):
             except:
                 pass
             
-            messages.success(request, 'Registration successful! You can now login.')
-            return redirect('accounts:login')
+            # Auto login for convenience
+            login(request, user)
+            messages.success(request, 'Registration successful! Welcome.')
+            return redirect('quiz:teacher_dashboard')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
@@ -41,16 +44,26 @@ def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
+            login_id = form.cleaned_data['username'].strip()
             password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
+            
+            # Support login with email or username
+            user = authenticate(request, username=login_id, password=password)
+            if user is None:
+                # Try email lookup
+                from django.contrib.auth.models import User
+                try:
+                    user_obj = User.objects.get(email__iexact=login_id)
+                    user = authenticate(request, username=user_obj.username, password=password)
+                except User.DoesNotExist:
+                    user = None
             
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.get_full_name() or user.username}!')
                 return redirect('quiz:teacher_dashboard')
             else:
-                messages.error(request, 'Invalid username or password')
+                messages.error(request, 'Invalid username/email or password')
         else:
             messages.error(request, 'Please correct the errors below')
     else:
@@ -103,13 +116,17 @@ def profile(request):
 
 
 def verify_otp(request):
-    return render(request, 'accounts/verify_otp.html')
+    # Placeholder - full OTP flow disabled for simpler OSS self-host deployment.
+    # Teachers use password-based auth after registration. Strong passwords recommended.
+    messages.info(request, 'Email/OTP verification is not required in this build. Use your password to login.')
+    return redirect('accounts:login')
 
 
 def verify_email(request, uidb64, token):
-    return render(request, 'accounts/email_confirm.html')
+    messages.info(request, 'Email verification not active. Please login with your credentials.')
+    return redirect('accounts:login')
 
 
 def resend_otp(request):
-    return redirect('accounts:verify_otp')
+    return redirect('accounts:login')
 

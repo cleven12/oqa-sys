@@ -8,7 +8,7 @@
         <i data-lucide="bar-chart-2" class="w-6 h-6 text-blue-600"></i>
         <div>
           <h1 class="text-xl font-bold text-gray-800">Quiz Results</h1>
-          <p class="text-sm text-gray-500">{{ quiz.title }} · <span class="font-mono">{{ quiz.quiz_code }}</span></p>
+          <p class="text-sm text-gray-500">{{ quiz.title }} · <span onclick="copyCode(this)" class="font-mono cursor-pointer hover:underline" title="Click to copy">{{ quiz.quiz_code }}</span></p>
         </div>
       </div>
       <div class="flex space-x-3">
@@ -32,7 +32,7 @@
         <p class="text-sm text-gray-500 mt-1">Total Submitted</p>
       </div>
       <div class="bg-white rounded-xl p-4 shadow-sm text-center">
-        <p class="text-3xl font-bold text-green-600">{{ sessions|length }}</p>
+        <p class="text-3xl font-bold text-green-600">{{ passed_count|default:0 }}</p>
         <p class="text-sm text-gray-500 mt-1">Passed</p>
       </div>
       <div class="bg-white rounded-xl p-4 shadow-sm text-center">
@@ -74,7 +74,8 @@
             </thead>
             <tbody>
               {% for s in sessions %}
-              <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+              <tr class="border-b border-gray-50 hover:bg-blue-50 transition cursor-pointer"
+                  onclick="window.location.href='{% url 'quiz:student_detail' s.id %}'">
                 <td class="px-4 py-3 text-gray-400">{{ forloop.counter }}</td>
                 <td class="px-4 py-3 font-medium text-gray-800">{{ s.full_name }}</td>
                 <td class="px-4 py-3 font-mono text-xs text-gray-600">{{ s.reg_number }}</td>

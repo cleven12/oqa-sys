@@ -1,0 +1,9 @@
+/* 
+OQA System - Custom styles
+Kept intentionally light. We rely on Tailwind CDN for pro rapid development.
+Add overrides here for self-hosted branding (common Pro request).
+*/
+
+body {
+  font-feature-settings: "tnum";
+}

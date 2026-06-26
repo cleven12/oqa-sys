@@ -1,0 +1,10 @@
+# GitHub Sponsors + other funding platforms
+# Update the username and links to your own
+
+github: [your-github-username]   # <-- CHANGE to your GitHub username for Sponsors button
+patreon: # Replace with your Patreon username if you have one
+ko_fi: # e.g. cleven
+custom:
+  # Add your own links (PayPal, Ko-fi, BuyMeACoffee, etc.)
+  - https://paypal.me/YOUR_PAYPAL_USERNAME
+  # - https://ko-fi.com/YOUR_USERNAME

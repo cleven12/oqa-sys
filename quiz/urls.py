@@ -2,6 +2,7 @@ from django.urls import path
 from . import views, api
 
 app_name = 'quiz'
+# Pro users can mount additional API routes here (advanced monitoring)
 
 urlpatterns = [
     # Landing and student quiz access
@@ -31,14 +32,13 @@ urlpatterns = [
     path('teacher/question/<int:question_id>/edit/', views.question_edit, name='question_edit'),
     path('teacher/question/<int:question_id>/delete/', views.question_delete, name='question_delete'),
     
-    # Excel import/export
-    path('teacher/quiz/<int:quiz_id>/import/', views.import_questions, name='import_questions'),
-    path('teacher/quiz/<int:quiz_id>/export-template/', views.export_template, name='export_template'),
+    # Export only
     path('teacher/quiz/<int:quiz_id>/export-results/', views.export_results, name='export_results'),
     
     # Live monitoring
     path('teacher/quiz/<int:quiz_id>/monitor/', views.live_monitor, name='live_monitor'),
     path('teacher/quiz/<int:quiz_id>/results/', views.quiz_results, name='quiz_results'),
+    path('teacher/session/<int:session_id>/detail/', views.student_detail, name='student_detail'),
     
     # AJAX API endpoints
     path('api/heartbeat/', api.heartbeat, name='api_heartbeat'),

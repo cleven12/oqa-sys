@@ -1,8 +1,11 @@
 # Online Quiz & Assessment System
 ### Full System Documentation — v1.0
-**Repository:** `online-quiz-assessment-system`
-**Deployment:** DigitalOcean · Port 81
-**Status:** Free — Monetization planned post-launch
+
+> **Note:** This document describes the open source architecture.
+> The core is free and open source. A **Pro version** with extra features and hosted options is available directly from the maintainer (see README).
+
+**Repository:** oqa-sys
+**Status:** Open source + Pro/freelance services available
 
 ---
 
@@ -125,13 +128,13 @@ A `SuspiciousEvent` model logs every detected event. Teachers see on the results
 - Teacher email verification via OTP and email link
 - Quiz creation with question groups and stratified randomization
 - MCQ, True/False, and Calculation question types
-- Bulk Excel question import and manual question entry
+- Manual question entry with optional Question Groups for stratified randomization
 - Quiz-level timer, question-level timer, or both
 - Auto-submit on timeout with server-side time authority
 - Live student monitoring via AJAX polling
 - Anti-cheat: tab switch detection, copy disable, time logging
 - CSV export of results
-- DigitalOcean deployment on port 81
+- Easy self-host or Pro hosted options
 
 ### Out of Scope (v1)
 - Student accounts or profiles
@@ -791,7 +794,7 @@ Same navigation bar, color scheme (blue primary, white background, gray accents)
 MCQ options always displayed as labeled choices — never typed. Current question number always visible. Dot grid navigator shows answered/unanswered at a glance.
 
 **Flexibility and Efficiency of Use**
-Bulk Excel import for large question sets. Short quiz code (QZ-4X9K) shareable via text. CSV export for offline result processing.
+Manual entry with stratified Question Groups. Short quiz code (QZ-4X9K) shareable via text. CSV export for offline result processing.
 
 **Aesthetic and Minimalist Design**
 Student pages: question text, options, timer, navigation only. No sidebar, no ads, no distractions. Teacher pages are structured with clear headings and tables.

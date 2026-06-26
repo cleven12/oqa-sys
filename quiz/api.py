@@ -1,8 +1,9 @@
+# Note: For high-traffic Pro deployments, add django-ratelimit or nginx rate limiting here.
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_http_methods
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_protect
 from django.db import models
 import json
 from .models import StudentSession, Answer, Question, SuspiciousEvent, Quiz
@@ -10,7 +11,7 @@ from .utils.timer import calculate_time_remaining, is_time_expired
 
 
 @require_POST
-@csrf_exempt
+@csrf_protect
 def heartbeat(request):
     """
     Heartbeat endpoint - called every 10 seconds from client
@@ -66,7 +67,7 @@ def heartbeat(request):
 
 
 @require_POST
-@csrf_exempt
+@csrf_protect
 def save_answer(request, session_id):
     """
     Save or update student answer
@@ -93,8 +94,23 @@ def save_answer(request, session_id):
         
         question = get_object_or_404(Question, id=question_id, quiz=session.quiz)
         
+        # normalize correct answer format
+        # Database might have "A", "B", "C", "D" or "option_a", "option_b", etc
+        correct_answer_normalized = question.correct_answer.lower().strip()
+        
+        # convert single letter to option_x format
+        letter_to_option = {
+            'a': 'option_a',
+            'b': 'option_b', 
+            'c': 'option_c',
+            'd': 'option_d'
+        }
+        
+        if correct_answer_normalized in letter_to_option:
+            correct_answer_normalized = letter_to_option[correct_answer_normalized]
+        
         # check if answer correct
-        is_correct = (chosen_answer == question.correct_answer)
+        is_correct = (chosen_answer.lower().strip() == correct_answer_normalized)
         marks_awarded = question.marks if is_correct else 0
         
         # create or update answer
@@ -130,7 +146,7 @@ def save_answer(request, session_id):
 
 
 @require_POST
-@csrf_exempt
+@csrf_protect
 def log_suspicion(request, session_id):
     """
     Log suspicious activity (anti-cheat)
@@ -225,7 +241,7 @@ def live_sessions(request, quiz_id):
 @require_http_methods(["GET"])
 def get_questions(request, session_id):
     """
-    Load all questions for a quiz session
+    Load questions for a quiz session (using pre-selected stratified list if groups configured)
     Returns questions WITHOUT correct answers (security)
     """
     try:
@@ -235,45 +251,57 @@ def get_questions(request, session_id):
         if session.is_submitted:
             return JsonResponse({'error': 'Quiz already submitted'}, status=400)
         
-        import random as _random
-
-        # use randomized order stored at quiz start
-        order_key = f'q_order_{session.id}'
-        question_ids = request.session.get(order_key)
-
-        if question_ids:
-            questions_map = {q.id: q for q in session.quiz.questions.filter(id__in=question_ids)}
-            questions = [questions_map[qid] for qid in question_ids if qid in questions_map]
+        import random
+        
+        # Use pre-selected question IDs for this session (supports group pick_count stratification)
+        selected_ids = session.selected_question_ids or []
+        if selected_ids:
+            # Preserve the selected order
+            questions = list(Question.objects.filter(id__in=selected_ids, quiz=session.quiz))
+            # order by the saved selected order
+            id_to_q = {q.id: q for q in questions}
+            questions = [id_to_q[qid] for qid in selected_ids if qid in id_to_q]
         else:
-            questions = list(session.quiz.questions.order_by('order'))
-
-        def get_options(question):
+            # Fallback for legacy sessions: all questions
+            questions = list(session.quiz.questions.all().order_by('order'))
+            if session.quiz.randomize_questions:
+                random.seed(session.id)
+                random.shuffle(questions)
+                random.seed()
+        
+        # prefetch existing answers
+        existing_answers = {a.question_id: a.chosen_answer for a in session.answers.all()}
+        
+        questions_data = []
+        for idx, question in enumerate(questions):
+            # build options
             if question.question_type == 'true_false':
-                return [
+                options = [
                     {'key': 'option_a', 'label': 'A)', 'text': question.option_a or 'True'},
                     {'key': 'option_b', 'label': 'B)', 'text': question.option_b or 'False'},
                 ]
-            choices = [(k, getattr(question, k)) for k in ['option_a','option_b','option_c','option_d']
-                       if getattr(question, k)]
-            if question.quiz.randomize_choices:
-                _random.seed(f"{session.id}{question.id}")
-                _random.shuffle(choices)
-                _random.seed()
-            return [{'key': k, 'label': chr(65+i)+')', 'text': v} for i,(k,v) in enumerate(choices)]
-
-        # prefetch existing answers
-        existing = {a.question_id: a.chosen_answer for a in session.answers.all()}
-
-        questions_data = []
-        for idx, question in enumerate(questions):
+            else:  # mcq
+                options = []
+                for opt_key in ['option_a', 'option_b', 'option_c', 'option_d']:
+                    opt_value = getattr(question, opt_key, None)
+                    if opt_value:
+                        label = opt_key[-1].upper()  # Get A, B, C, or D
+                        options.append({'key': opt_key, 'label': f'{label})', 'text': opt_value})
+                
+                # randomize choices if enabled (use session+question ID as seed)
+                if session.quiz.randomize_choices:
+                    random.seed(f"{session.id}{question.id}")
+                    random.shuffle(options)
+                    random.seed()
+            
             questions_data.append({
                 'id': question.id,
                 'index': idx,
                 'text': question.question_text,
                 'type': question.question_type,
                 'marks': question.marks,
-                'options': get_options(question),
-                'chosen_answer': existing.get(question.id)
+                'options': options,
+                'chosen_answer': existing_answers.get(question.id)
             })
         
         return JsonResponse({

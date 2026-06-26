@@ -20,17 +20,6 @@
     
     <style>
         [x-cloak] { display: none !important; }
-        
-        /* Loading fallback - show content even if Alpine doesn't load */
-        [x-show] {
-            display: block !important;
-        }
-        
-        /* Ensure page is visible even if JS fails */
-        body {
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -60,6 +49,21 @@
             }
         });
         
+        // Global: copy quiz code helper
+        window.copyCode = function(elOrText, maybeEl) {
+            let text = elOrText;
+            let el = maybeEl || elOrText;
+            if (typeof elOrText === 'object' && elOrText.textContent) {
+                text = elOrText.textContent.trim();
+                el = elOrText;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                const origText = el.textContent;
+                el.textContent = text + ' ✓';
+                setTimeout(() => { el.textContent = origText; }, 1200);
+            }).catch(() => { prompt('Copy:', text); });
+        };
+        
         // Check if Alpine loaded after 2 seconds
         setTimeout(function() {
             if (typeof Alpine === 'undefined') {
@@ -74,5 +78,9 @@
     </script>
     
     {% block extra_js %}{% endblock %}
+
+    <footer class="text-center text-xs text-gray-400 py-4">
+        OQA System — Open Source • <a href="https://github.com" class="underline">Pro available</a>
+    </footer>
 </body>
 </html>

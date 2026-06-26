@@ -258,10 +258,9 @@ class AccountViewsTest(TestCase):
         self.assertRedirects(response, reverse('quiz:landing'))
     
     def test_verify_otp_view(self):
-        """Test OTP verification page loads"""
+        """Test OTP verification page now redirects (simplified OSS auth)"""
         response = self.client.get(reverse('accounts:verify_otp'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'accounts/verify_otp.html')
+        self.assertEqual(response.status_code, 302)  # redirects to login now
 
 
 class TeacherProfileIntegrationTest(TestCase):

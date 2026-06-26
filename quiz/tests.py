@@ -19,6 +19,7 @@ Learning Points:
 - Test edge cases (expired timers, zero questions, etc.)
 """
 
+# Extensive tests for OSS core. Pro version includes E2E browser tests.
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -274,19 +275,7 @@ class QuestionModelTest(TestCase):
         self.assertEqual(question.option_a, 'True')
         self.assertEqual(question.option_b, 'False')
     
-    def test_calculation_question_creation(self):
-        """Test creating a calculation question"""
-        question = Question.objects.create(
-            quiz=self.quiz,
-            question_text='Calculate 15 x 8',
-            question_type='calculation',
-            correct_answer='120',
-            max_attempts=3
-        )
-        
-        self.assertEqual(question.question_type, 'calculation')
-        self.assertEqual(question.correct_answer, '120')
-        self.assertEqual(question.max_attempts, 3)
+    # Calculation questions removed in pro version. MCQ + True/False only.
     
     def test_question_without_group(self):
         """Test creating question without a group"""
@@ -567,26 +556,7 @@ class AnswerModelTest(TestCase):
         self.assertFalse(answer.is_correct)
         self.assertEqual(answer.marks_awarded, 0)
     
-    def test_calculation_attempts(self):
-        """Test attempt tracking for calculation questions"""
-        calc_question = Question.objects.create(
-            quiz=self.quiz,
-            question_text='Calculate 2 + 2',
-            question_type='calculation',
-            correct_answer='4',
-            max_attempts=3
-        )
-        
-        answer = Answer.objects.create(
-            session=self.session,
-            question=calc_question,
-            chosen_answer='5',
-            attempts_used=1,
-            is_correct=False
-        )
-        
-        self.assertEqual(answer.attempts_used, 1)
-        self.assertFalse(answer.is_correct)
+    # Calculation / max_attempts removed — only MCQ and true_false supported in pro version.
 
 
 class SuspiciousEventModelTest(TestCase):
@@ -670,7 +640,7 @@ class QuizFormTest(TestCase):
             'title': 'Python Quiz',
             'description': 'Test your Python skills',
             'timer_mode': 'quiz',
-            'quiz_duration': 3600,
+            'quiz_duration': 60,
             'pass_mark': 50,
             'randomize_questions': True,
             'randomize_choices': True
