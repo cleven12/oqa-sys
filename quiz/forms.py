@@ -3,6 +3,7 @@ from .models import Quiz, Question, QuestionGroup, StudentSession
 
 
 class QuizForm(forms.ModelForm):
+    # Pro users get access to more advanced form options (time per group etc)
     quiz_duration = forms.IntegerField(
         min_value=1,
         max_value=300,
@@ -89,8 +90,4 @@ class StudentEntryForm(forms.Form):
     email = forms.EmailField(required=True)
 
 
-class ExcelImportForm(forms.Form):
-    excel_file = forms.FileField(
-        required=True,
-        help_text='Upload Excel file with questions'
-    )
+
