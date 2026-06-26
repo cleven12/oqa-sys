@@ -171,7 +171,7 @@ I also offer a **Pro version** and professional freelance services:
 
 📧 **Email me directly for Pro licensing, demos, quotes, or custom development work:**
 
-**`contact@your-freelance-domain.com`**  *(replace with your real email before publishing)*
+**`freelance@cleven.dev`**  *(replace with your real email before publishing)*
 
 I reply within 24–48 hours. Please include:
 - Number of expected students / quizzes
@@ -185,7 +185,7 @@ This is how I fund ongoing development of the open source project while offering
 Made with ❤️ to be simple, fair, and professional for real classrooms and educators.
 
 **Before making the repository public:**
-1. Replace `contact@your-freelance-domain.com` with your real email address in README.md and .github/FUNDING.yml
+1. Replace `freelance@cleven.dev` with your real email address in README.md and .github/FUNDING.yml
 2. Update GitHub username in FUNDING.yml
 3. (Optional) Add real sponsor links
 4. Review docs/ for any outdated deployment notes
