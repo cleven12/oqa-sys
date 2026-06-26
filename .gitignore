@@ -1,31 +1,48 @@
+# Environment & secrets
 .env
-venv
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+.env.*
+
+# Python / Django
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 *.db
 *.sqlite3
 *.log
-*.bak
-*.tmp
+
+# Static / Media (generated in production)
+staticfiles/
+media/
+collectedstatic/
+
+# IDE & OS
+.idea/
+.vscode/
 *.swp
 *.swo
 .DS_Store
-.idea
-.vscode
-*.egg-info
-dist
-build
+Thumbs.db
+
+# Build / distribution
+build/
+dist/
+*.egg-info/
 *.egg
 *.whl
 *.tar.gz
 *.zip
-*.egg-info
-*.egg-info
-*.egg-info/
-*.egg-info/*
-*.egg-info/*.egg-info
-*.egg-info/*.egg-info/
-*.egg-info/*.egg-info/* 
-copilot-session-5fd24668-d39b-41f2-bab9-7c7a72746565.md
+
+# Testing & coverage
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# Misc
+*.bak
+*.tmp
+*.orig
+*.log.*
